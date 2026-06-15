@@ -1,7 +1,6 @@
 #pragma once
 
 #include "serial_port/xbee/constants.hpp"
-#include "serial_port/xbee/parameters.hpp"
 
 #include <cstdint>
 #include <vector>
