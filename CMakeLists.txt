@@ -50,7 +50,7 @@ set_target_properties(device_transport_serial
 )
 
 add_library(device_transport_desktop
-    src/serial_port/xbee/xbee.cpp
+    src/xbee/xbee.cpp
 )
 
 add_library(device_transport::desktop ALIAS device_transport_desktop)

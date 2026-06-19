@@ -1,4 +1,4 @@
-#include "serial_port/xbee/xbee.hpp"
+#include "xbee/xbee.hpp"
 
 #include "core/byte_codec.hpp"
 
@@ -196,7 +196,7 @@ namespace device_transport
         }
     }
 
-    uint8_t XBee::openNetwork(const uint8_t seconds)
+    uint8_t XBee::openJoinWindow(const uint8_t seconds)
     {
         const uint8_t nodeJoinResult = atCommandRequest(at_command::nj, seconds);
         if (nodeJoinResult != 0)
@@ -213,7 +213,7 @@ namespace device_transport
         return atCommandRequest(at_command::cb, static_cast<uint8_t>(2));
     }
 
-    uint8_t XBee::closeNetwork()
+    uint8_t XBee::closeJoinWindow()
     {
         const uint8_t nodeJoinResult = atCommandRequest(at_command::nj, static_cast<uint8_t>(0));
         if (nodeJoinResult != 0)
@@ -267,6 +267,54 @@ namespace device_transport
         _pendingAtResponseCompleted = false;
         _pendingAtData.clear();
         return success;
+    }
+
+    bool XBee::readAtCommand8(const uint16_t atCommand, uint8_t &value, const uint32_t timeoutMs)
+    {
+        std::vector<uint8_t> data;
+        if (!readAtCommandData(atCommand, data, timeoutMs) || data.size() != 1)
+        {
+            return false;
+        }
+
+        value = byte_codec::read8(data);
+        return true;
+    }
+
+    bool XBee::readAtCommand16(const uint16_t atCommand, uint16_t &value, const uint32_t timeoutMs)
+    {
+        std::vector<uint8_t> data;
+        if (!readAtCommandData(atCommand, data, timeoutMs) || data.size() != 2)
+        {
+            return false;
+        }
+
+        value = byte_codec::read16(data);
+        return true;
+    }
+
+    bool XBee::readAtCommand32(const uint16_t atCommand, uint32_t &value, const uint32_t timeoutMs)
+    {
+        std::vector<uint8_t> data;
+        if (!readAtCommandData(atCommand, data, timeoutMs) || data.size() != 4)
+        {
+            return false;
+        }
+
+        value = byte_codec::read32(data);
+        return true;
+    }
+
+    bool XBee::readAtCommand64(const uint16_t atCommand, uint64_t &value, const uint32_t timeoutMs)
+    {
+        std::vector<uint8_t> data;
+        if (!readAtCommandData(atCommand, data, timeoutMs) || data.size() != 8)
+        {
+            return false;
+        }
+
+        value = byte_codec::read64(data);
+        return true;
     }
 
     uint8_t XBee::atCommandRequest(const uint16_t atCommand)
@@ -400,6 +448,11 @@ namespace device_transport
             payload.swap(_outputPayload);
         }
 
+        return transmitRequest(destinationSn, payload, destinationNa, broadcastRadius, options);
+    }
+
+    uint8_t XBee::transmitRequest(const uint64_t destinationSn, const std::vector<uint8_t> &payload, const uint16_t destinationNa, const uint8_t broadcastRadius, const uint8_t options)
+    {
         std::lock_guard<std::mutex> lock(_commandMutex);
         _clearFrameData();
         byte_codec::write8(_frameData, api_frame::frame_type::transmitRequest);
@@ -408,11 +461,7 @@ namespace device_transport
         byte_codec::write16(_frameData, destinationNa);
         byte_codec::write8(_frameData, broadcastRadius);
         byte_codec::write8(_frameData, options);
-        for (const uint8_t byte : payload)
-        {
-            byte_codec::write8(_frameData, byte);
-        }
-
+        _frameData.insert(_frameData.end(), payload.begin(), payload.end());
         return _sendFrameData();
     }
 
@@ -535,7 +584,7 @@ namespace device_transport
         }
 
         const uint32_t writtenSize = _serialPort.send();
-        _trace(SerialTraceDirection::tx, output.data(), output.size());
+        _trace(TraceDirection::tx, output.data(), output.size());
         return writtenSize == output.size() ? 0 : 1;
     }
 
@@ -552,7 +601,7 @@ namespace device_transport
         output.push_back(byte);
     }
 
-    void XBee::_trace(const SerialTraceDirection direction, const uint8_t *bytes, const size_t size) const
+    void XBee::_trace(const TraceDirection direction, const uint8_t *bytes, const size_t size) const
     {
         if (_traceCallback != nullptr && bytes != nullptr && size != 0)
         {
@@ -627,11 +676,11 @@ namespace device_transport
                 std::vector<uint8_t> rawFrame;
                 if (xbee_protocol::buildFrame(rawFrame, frameData))
                 {
-                    _trace(SerialTraceDirection::rx, rawFrame.data(), rawFrame.size());
+                    _trace(TraceDirection::rx, rawFrame.data(), rawFrame.size());
                 }
                 else
                 {
-                    _trace(SerialTraceDirection::rx, frame.data, frame.size);
+                    _trace(TraceDirection::rx, frame.data, frame.size);
                 }
 
                 if (frameType == api_frame::frame_type::atCommandResponse && frame.size >= 5)

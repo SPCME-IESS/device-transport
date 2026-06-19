@@ -1,38 +1,62 @@
 # device-transport
 
-Reusable Windows device transport library. The current module set includes
-Windows serial byte I/O, shared byte encoding helpers, and XBee API-frame support.
+Reusable low-level Windows transport library for byte encoding, serial-port I/O,
+and XBee API frames.
 
-Application concepts such as devices, database records, initialization workflows,
-and telemetry storage must stay outside this repository.
+The library intentionally does not contain application concepts such as devices,
+databases, initialization workflows, telemetry storage, UI frameworks, or user
+algorithms.
+
+## Responsibilities
+
+- big-endian byte helpers;
+- transport error codes;
+- trace direction and callback support;
+- Windows `SerialPort` byte I/O;
+- XBee API frame constants and structs;
+- XBee AT and remote AT commands;
+- XBee transmit requests;
+- XBee receive packet parsing.
 
 ## Threading Model
 
-`serial_port` owns Windows COM-port I/O and creates the serial reader thread.
+`SerialPort` owns the Windows COM-port reader thread.
 
-`serial_port/xbee` owns XBee API-frame building/parsing and creates a parser
-thread for console/service apps without an event loop.
+`XBee` owns the API-frame parser thread and exposes parsed receive packets to
+consumer applications.
 
 ## Layout
 
 ```text
 include/
   core/
+    byte_codec.hpp
+    error.hpp
+    trace.hpp
+
   serial_port/
-    xbee/
+    serial_port.hpp
+
+  xbee/
+    constants.hpp
+    frames.hpp
+    xbee.hpp
 
 src/
   serial_port/
-    xbee/
+    serial_port.cpp
+
+  xbee/
+    xbee.cpp
 ```
 
 ## Build
 
 Requirements:
 
-- CMake 3.20 or newer
-- Windows
-- C++11-compatible compiler
+- CMake 3.20 or newer;
+- Windows;
+- C++11-compatible compiler.
 
 ```sh
 cmake -S . -B build
@@ -60,29 +84,65 @@ find_package(device_transport CONFIG REQUIRED)
 target_link_libraries(my_app PRIVATE device_transport::desktop)
 ```
 
-Available CMake targets:
+Available targets:
 
-- `device_transport::core` is header-only byte helpers and XBee frame protocol.
-- `device_transport::serial` is Windows COM-port I/O.
-- `device_transport::desktop` is XBee over `serial_port`.
-- `device_transport::device_transport` is kept as a compatibility target for `device_transport::desktop`.
+- `device_transport::core` provides header-only byte, error, and trace helpers;
+- `device_transport::serial` provides Windows COM-port I/O;
+- `device_transport::desktop` provides XBee over `SerialPort`;
+- `device_transport::device_transport` is a compatibility alias for the desktop target.
 
 ## C++ Usage
 
 ```cpp
-#include <serial_port/xbee/xbee.hpp>
+#include <core/byte_codec.hpp>
+#include <xbee/xbee.hpp>
+
+#include <cstdint>
+#include <vector>
 
 device_transport::XBee xbee;
-xbee.open("/dev/ttyUSB0", 9600);
+if (xbee.open("\\\\.\\COM5", 9600) != device_transport::TransportError::ok)
+{
+    return 1;
+}
+
+std::vector<uint8_t> payload;
+device_transport::byte_codec::write8(payload, 0x01);
+device_transport::byte_codec::write16(payload, 0x0800);
+
+xbee.transmitRequest(0x0013A20000000000ULL, payload);
+```
+
+The older stateful payload API remains available for compatibility:
+
+```cpp
 xbee.clearOutputPayload();
-xbee.write8(static_cast<uint8_t>(0x01));
+xbee.write8(0x01);
+xbee.write16(0x0800);
 xbee.transmitRequest(0x0013A20000000000ULL);
 ```
 
-## Validation
+## Join Window
 
-The desktop library target is validated with CMake/MSBuild and MinGW through the
-consumer project.
+```cpp
+xbee.openJoinWindow(60);
+xbee.closeJoinWindow();
+```
+
+## AT Reads
+
+Raw and typed AT response helpers are available:
+
+```cpp
+std::vector<uint8_t> data;
+xbee.readAtCommandData(device_transport::at_command::op, data, 200);
+
+uint16_t panId = 0;
+xbee.readAtCommand16(device_transport::at_command::oi, panId, 200);
+
+uint64_t extendedPanId = 0;
+xbee.readAtCommand64(device_transport::at_command::op, extendedPanId, 200);
+```
 
 ## License
 

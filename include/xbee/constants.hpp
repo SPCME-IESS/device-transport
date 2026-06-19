@@ -86,7 +86,6 @@ namespace device_transport
         static constexpr uint16_t v = 0x2556;
         static constexpr uint16_t nr = 0x4E52;
         static constexpr uint16_t wr = 0x5752;
-        static constexpr uint16_t sl = 0x534C;
         static constexpr uint16_t ac = 0x4143;
         static constexpr uint16_t cb = 0x4342;
     }

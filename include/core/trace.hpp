@@ -4,7 +4,7 @@
 
 namespace device_transport
 {
-    enum class SerialTraceDirection : uint8_t
+    enum class TraceDirection : uint8_t
     {
         rx,
         tx

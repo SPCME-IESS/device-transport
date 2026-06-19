@@ -1,8 +1,9 @@
 #pragma once
 
 #include "serial_port/serial_port.hpp"
-#include "serial_port/trace.hpp"
-#include "serial_port/xbee/frames.hpp"
+#include "core/trace.hpp"
+#include "xbee/constants.hpp"
+#include "xbee/frames.hpp"
 
 #include <atomic>
 #include <cstddef>
@@ -15,7 +16,7 @@
 
 namespace device_transport
 {
-    using XBeeTraceCallback = void (*)(SerialTraceDirection direction, const uint8_t *bytes, size_t size, void *userData);
+    using XBeeTraceCallback = void (*)(TraceDirection direction, const uint8_t *bytes, size_t size, void *userData);
 
     class XBee
     {
@@ -27,10 +28,14 @@ namespace device_transport
         bool isOpen() const;
         void close();
 
-        uint8_t openNetwork(uint8_t seconds = 60);
-        uint8_t closeNetwork();
+        uint8_t openJoinWindow(uint8_t seconds = 60);
+        uint8_t closeJoinWindow();
 
         bool readAtCommandData(uint16_t atCommand, std::vector<uint8_t> &data, uint32_t timeoutMs);
+        bool readAtCommand8(uint16_t atCommand, uint8_t &value, uint32_t timeoutMs);
+        bool readAtCommand16(uint16_t atCommand, uint16_t &value, uint32_t timeoutMs);
+        bool readAtCommand32(uint16_t atCommand, uint32_t &value, uint32_t timeoutMs);
+        bool readAtCommand64(uint16_t atCommand, uint64_t &value, uint32_t timeoutMs);
 
         uint8_t atCommandRequest(uint16_t atCommand);
         uint8_t atCommandRequest(uint16_t atCommand, uint8_t value);
@@ -45,6 +50,7 @@ namespace device_transport
         uint8_t remoteAtCommandRequest(uint64_t destinationSn, uint16_t atCommand, uint64_t value, uint16_t destinationNa = 0xFFFE);
 
         uint8_t transmitRequest(uint64_t destinationSn, uint16_t destinationNa = 0xFFFE, uint8_t broadcastRadius = 0x00, uint8_t options = 0x00);
+        uint8_t transmitRequest(uint64_t destinationSn, const std::vector<uint8_t> &payload, uint16_t destinationNa = 0xFFFE, uint8_t broadcastRadius = 0x00, uint8_t options = 0x00);
 
         void clearOutputPayload();
 
@@ -92,7 +98,7 @@ namespace device_transport
         uint8_t _sendFrameData();
 
         void _appendEscapedByte(std::vector<uint8_t> &output, uint8_t byte) const;
-        void _trace(SerialTraceDirection direction, const uint8_t *bytes, size_t size) const;
+        void _trace(TraceDirection direction, const uint8_t *bytes, size_t size) const;
 
         void _parserLoop();
     };
