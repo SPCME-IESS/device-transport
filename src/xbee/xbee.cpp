@@ -378,76 +378,99 @@ namespace device_transport
         return _sendFrameData();
     }
 
-    uint8_t XBee::remoteAtCommandRequest(const uint64_t destinationSn, const uint16_t atCommand, const uint16_t destinationNa)
+    uint8_t XBee::remoteAtCommandRequest(
+        const uint64_t destinationXbee64Id,
+        const uint16_t destinationXbee16Id,
+        const uint16_t atCommand)
     {
         std::lock_guard<std::mutex> lock(_commandMutex);
         _clearFrameData();
         byte_codec::write8(_frameData, api_frame::frame_type::remoteAtCommandRequest);
         byte_codec::write8(_frameData, api_frame::defaultFrameId);
-        byte_codec::write64(_frameData, destinationSn);
-        byte_codec::write16(_frameData, destinationNa);
+        byte_codec::write64(_frameData, destinationXbee64Id);
+        byte_codec::write16(_frameData, destinationXbee16Id);
         byte_codec::write8(_frameData, api_frame::remoteCommandOptionsApplyChanges);
         byte_codec::write16(_frameData, atCommand);
         return _sendFrameData();
     }
 
-    uint8_t XBee::remoteAtCommandRequest(const uint64_t destinationSn, const uint16_t atCommand, const uint8_t value, const uint16_t destinationNa)
+    uint8_t XBee::remoteAtCommandRequest(
+        const uint64_t destinationXbee64Id,
+        const uint16_t destinationXbee16Id,
+        const uint16_t atCommand,
+        const uint8_t value)
     {
         std::lock_guard<std::mutex> lock(_commandMutex);
         _clearFrameData();
         byte_codec::write8(_frameData, api_frame::frame_type::remoteAtCommandRequest);
         byte_codec::write8(_frameData, api_frame::defaultFrameId);
-        byte_codec::write64(_frameData, destinationSn);
-        byte_codec::write16(_frameData, destinationNa);
+        byte_codec::write64(_frameData, destinationXbee64Id);
+        byte_codec::write16(_frameData, destinationXbee16Id);
         byte_codec::write8(_frameData, api_frame::remoteCommandOptionsApplyChanges);
         byte_codec::write16(_frameData, atCommand);
         byte_codec::write8(_frameData, value);
         return _sendFrameData();
     }
 
-    uint8_t XBee::remoteAtCommandRequest(const uint64_t destinationSn, const uint16_t atCommand, const uint16_t value, const uint16_t destinationNa)
+    uint8_t XBee::remoteAtCommandRequest(
+        const uint64_t destinationXbee64Id,
+        const uint16_t destinationXbee16Id,
+        const uint16_t atCommand,
+        const uint16_t value)
     {
         std::lock_guard<std::mutex> lock(_commandMutex);
         _clearFrameData();
         byte_codec::write8(_frameData, api_frame::frame_type::remoteAtCommandRequest);
         byte_codec::write8(_frameData, api_frame::defaultFrameId);
-        byte_codec::write64(_frameData, destinationSn);
-        byte_codec::write16(_frameData, destinationNa);
+        byte_codec::write64(_frameData, destinationXbee64Id);
+        byte_codec::write16(_frameData, destinationXbee16Id);
         byte_codec::write8(_frameData, api_frame::remoteCommandOptionsApplyChanges);
         byte_codec::write16(_frameData, atCommand);
         byte_codec::write16(_frameData, value);
         return _sendFrameData();
     }
 
-    uint8_t XBee::remoteAtCommandRequest(const uint64_t destinationSn, const uint16_t atCommand, const uint32_t value, const uint16_t destinationNa)
+    uint8_t XBee::remoteAtCommandRequest(
+        const uint64_t destinationXbee64Id,
+        const uint16_t destinationXbee16Id,
+        const uint16_t atCommand,
+        const uint32_t value)
     {
         std::lock_guard<std::mutex> lock(_commandMutex);
         _clearFrameData();
         byte_codec::write8(_frameData, api_frame::frame_type::remoteAtCommandRequest);
         byte_codec::write8(_frameData, api_frame::defaultFrameId);
-        byte_codec::write64(_frameData, destinationSn);
-        byte_codec::write16(_frameData, destinationNa);
+        byte_codec::write64(_frameData, destinationXbee64Id);
+        byte_codec::write16(_frameData, destinationXbee16Id);
         byte_codec::write8(_frameData, api_frame::remoteCommandOptionsApplyChanges);
         byte_codec::write16(_frameData, atCommand);
         byte_codec::write32(_frameData, value);
         return _sendFrameData();
     }
 
-    uint8_t XBee::remoteAtCommandRequest(const uint64_t destinationSn, const uint16_t atCommand, const uint64_t value, const uint16_t destinationNa)
+    uint8_t XBee::remoteAtCommandRequest(
+        const uint64_t destinationXbee64Id,
+        const uint16_t destinationXbee16Id,
+        const uint16_t atCommand,
+        const uint64_t value)
     {
         std::lock_guard<std::mutex> lock(_commandMutex);
         _clearFrameData();
         byte_codec::write8(_frameData, api_frame::frame_type::remoteAtCommandRequest);
         byte_codec::write8(_frameData, api_frame::defaultFrameId);
-        byte_codec::write64(_frameData, destinationSn);
-        byte_codec::write16(_frameData, destinationNa);
+        byte_codec::write64(_frameData, destinationXbee64Id);
+        byte_codec::write16(_frameData, destinationXbee16Id);
         byte_codec::write8(_frameData, api_frame::remoteCommandOptionsApplyChanges);
         byte_codec::write16(_frameData, atCommand);
         byte_codec::write64(_frameData, value);
         return _sendFrameData();
     }
 
-    uint8_t XBee::transmitRequest(const uint64_t destinationSn, const uint16_t destinationNa, const uint8_t broadcastRadius, const uint8_t options)
+    uint8_t XBee::transmitRequest(
+        const uint64_t destinationXbee64Id,
+        const uint16_t destinationXbee16Id,
+        const uint8_t broadcastRadius,
+        const uint8_t options)
     {
         std::vector<uint8_t> payload;
         {
@@ -455,17 +478,22 @@ namespace device_transport
             payload.swap(_outputPayload);
         }
 
-        return transmitRequest(destinationSn, payload, destinationNa, broadcastRadius, options);
+        return transmitRequest(destinationXbee64Id, destinationXbee16Id, payload, broadcastRadius, options);
     }
 
-    uint8_t XBee::transmitRequest(const uint64_t destinationSn, const std::vector<uint8_t> &payload, const uint16_t destinationNa, const uint8_t broadcastRadius, const uint8_t options)
+    uint8_t XBee::transmitRequest(
+        const uint64_t destinationXbee64Id,
+        const uint16_t destinationXbee16Id,
+        const std::vector<uint8_t> &payload,
+        const uint8_t broadcastRadius,
+        const uint8_t options)
     {
         std::lock_guard<std::mutex> lock(_commandMutex);
         _clearFrameData();
         byte_codec::write8(_frameData, api_frame::frame_type::transmitRequest);
         byte_codec::write8(_frameData, api_frame::defaultFrameId);
-        byte_codec::write64(_frameData, destinationSn);
-        byte_codec::write16(_frameData, destinationNa);
+        byte_codec::write64(_frameData, destinationXbee64Id);
+        byte_codec::write16(_frameData, destinationXbee16Id);
         byte_codec::write8(_frameData, broadcastRadius);
         byte_codec::write8(_frameData, options);
         _frameData.insert(_frameData.end(), payload.begin(), payload.end());

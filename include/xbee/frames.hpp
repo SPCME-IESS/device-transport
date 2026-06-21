@@ -34,7 +34,7 @@ namespace device_transport
     struct TransmitStatus
     {
         uint8_t frameId{};
-        uint16_t destinationAddress{};
+        uint16_t destinationXbee16Id{};
         uint8_t retryCount{};
         uint8_t deliveryStatus{};
         uint8_t discoveryStatus{};

@@ -43,14 +43,23 @@ namespace device_transport
         uint8_t atCommandRequest(uint16_t atCommand, uint32_t value);
         uint8_t atCommandRequest(uint16_t atCommand, uint64_t value);
 
-        uint8_t remoteAtCommandRequest(uint64_t destinationSn, uint16_t atCommand, uint16_t destinationNa = 0xFFFE);
-        uint8_t remoteAtCommandRequest(uint64_t destinationSn, uint16_t atCommand, uint8_t value, uint16_t destinationNa = 0xFFFE);
-        uint8_t remoteAtCommandRequest(uint64_t destinationSn, uint16_t atCommand, uint16_t value, uint16_t destinationNa = 0xFFFE);
-        uint8_t remoteAtCommandRequest(uint64_t destinationSn, uint16_t atCommand, uint32_t value, uint16_t destinationNa = 0xFFFE);
-        uint8_t remoteAtCommandRequest(uint64_t destinationSn, uint16_t atCommand, uint64_t value, uint16_t destinationNa = 0xFFFE);
+        uint8_t remoteAtCommandRequest(uint64_t destinationXbee64Id, uint16_t destinationXbee16Id, uint16_t atCommand);
+        uint8_t remoteAtCommandRequest(uint64_t destinationXbee64Id, uint16_t destinationXbee16Id, uint16_t atCommand, uint8_t value);
+        uint8_t remoteAtCommandRequest(uint64_t destinationXbee64Id, uint16_t destinationXbee16Id, uint16_t atCommand, uint16_t value);
+        uint8_t remoteAtCommandRequest(uint64_t destinationXbee64Id, uint16_t destinationXbee16Id, uint16_t atCommand, uint32_t value);
+        uint8_t remoteAtCommandRequest(uint64_t destinationXbee64Id, uint16_t destinationXbee16Id, uint16_t atCommand, uint64_t value);
 
-        uint8_t transmitRequest(uint64_t destinationSn, uint16_t destinationNa = 0xFFFE, uint8_t broadcastRadius = 0x00, uint8_t options = 0x00);
-        uint8_t transmitRequest(uint64_t destinationSn, const std::vector<uint8_t> &payload, uint16_t destinationNa = 0xFFFE, uint8_t broadcastRadius = 0x00, uint8_t options = 0x00);
+        uint8_t transmitRequest(
+            uint64_t destinationXbee64Id,
+            uint16_t destinationXbee16Id = xbee_address::unknownXbee16Id,
+            uint8_t broadcastRadius = 0x00,
+            uint8_t options = 0x00);
+        uint8_t transmitRequest(
+            uint64_t destinationXbee64Id,
+            uint16_t destinationXbee16Id,
+            const std::vector<uint8_t> &payload,
+            uint8_t broadcastRadius = 0x00,
+            uint8_t options = 0x00);
 
         void clearOutputPayload();
 

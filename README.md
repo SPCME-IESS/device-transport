@@ -110,7 +110,20 @@ std::vector<uint8_t> payload;
 device_transport::byte_codec::write8(payload, 0x01);
 device_transport::byte_codec::write16(payload, 0x0800);
 
-xbee.transmitRequest(0x0013A20000000000ULL, payload);
+xbee.transmitRequest(
+    0x0013A20000000000ULL,
+    device_transport::xbee_address::unknownXbee16Id,
+    payload);
+```
+
+Remote AT commands use the same address-first order. Pass the unknown 16-bit
+address explicitly when it is not available:
+
+```cpp
+xbee.remoteAtCommandRequest(
+    0x0013A20000000000ULL,
+    device_transport::xbee_address::unknownXbee16Id,
+    device_transport::at_command::ni);
 ```
 
 The older stateful payload API remains available for compatibility:

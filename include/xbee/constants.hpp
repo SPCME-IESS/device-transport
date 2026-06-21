@@ -34,6 +34,11 @@ namespace device_transport
         }
     }
 
+    namespace xbee_address
+    {
+        static constexpr uint16_t unknownXbee16Id = 0xFFFE;
+    }
+
     namespace at_command
     {
         static constexpr uint16_t id = 0x4944;
