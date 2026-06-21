@@ -18,6 +18,7 @@ namespace device_transport
     TransportError SerialPort::open(const std::string &portName, const uint32_t baudRate)
     {
         close();
+        _closing = false;
 
         if (portName.empty() || baudRate == 0)
         {
@@ -54,6 +55,7 @@ namespace device_transport
 
     void SerialPort::close()
     {
+        _closing = true;
         _running = false;
         _inputCondition.notify_all();
 
@@ -65,16 +67,16 @@ namespace device_transport
         }
     }
 
-    uint16_t SerialPort::bytesToRead() const
+    size_t SerialPort::bytesToRead() const
     {
         std::lock_guard<std::mutex> lock(_inputMutex);
-        return static_cast<uint16_t>(_inputBuffer.size());
+        return _inputBuffer.size();
     }
 
-    uint16_t SerialPort::bytesToWrite() const
+    size_t SerialPort::bytesToWrite() const
     {
         std::lock_guard<std::mutex> lock(_outputMutex);
-        return static_cast<uint16_t>(_outputBuffer.size());
+        return _outputBuffer.size();
     }
 
     uint32_t SerialPort::bytesInDriverQueue() const
@@ -89,8 +91,7 @@ namespace device_transport
         COMSTAT status{};
         if (!ClearCommError(static_cast<HANDLE>(_nativeHandle), &errors, &status))
         {
-            _connectionLost = true;
-            _inputCondition.notify_all();
+            _markConnectionLost();
             return 0;
         }
 
@@ -115,6 +116,11 @@ namespace device_transport
     uint8_t SerialPort::read8()
     {
         std::lock_guard<std::mutex> lock(_inputMutex);
+        if (_inputBuffer.empty())
+        {
+            return 0;
+        }
+
         const uint8_t value = byte_codec::read8(_inputBuffer);
         _inputBuffer.erase(_inputBuffer.begin());
         return value;
@@ -123,6 +129,11 @@ namespace device_transport
     uint16_t SerialPort::read16()
     {
         std::lock_guard<std::mutex> lock(_inputMutex);
+        if (_inputBuffer.size() < 2)
+        {
+            return 0;
+        }
+
         const uint16_t value = byte_codec::read16(_inputBuffer);
         _inputBuffer.erase(_inputBuffer.begin(), _inputBuffer.begin() + 2);
         return value;
@@ -131,6 +142,11 @@ namespace device_transport
     uint32_t SerialPort::read32()
     {
         std::lock_guard<std::mutex> lock(_inputMutex);
+        if (_inputBuffer.size() < 4)
+        {
+            return 0;
+        }
+
         const uint32_t value = byte_codec::read32(_inputBuffer);
         _inputBuffer.erase(_inputBuffer.begin(), _inputBuffer.begin() + 4);
         return value;
@@ -139,6 +155,11 @@ namespace device_transport
     uint64_t SerialPort::read64()
     {
         std::lock_guard<std::mutex> lock(_inputMutex);
+        if (_inputBuffer.size() < 8)
+        {
+            return 0;
+        }
+
         const uint64_t value = byte_codec::read64(_inputBuffer);
         _inputBuffer.erase(_inputBuffer.begin(), _inputBuffer.begin() + 8);
         return value;
@@ -223,8 +244,7 @@ namespace device_transport
                 const DWORD remaining = static_cast<DWORD>(bytes.size() - totalWritten);
                 if (!WriteFile(static_cast<HANDLE>(_nativeHandle), bytes.data() + totalWritten, remaining, &bytesWritten, nullptr) || bytesWritten == 0)
                 {
-                    _connectionLost = true;
-                    _inputCondition.notify_all();
+                    _markConnectionLost();
                     break;
                 }
 
@@ -237,6 +257,11 @@ namespace device_transport
 
     TransportError SerialPort::_openNativeHandle()
     {
+        if (_closing)
+        {
+            return TransportError::openFailed;
+        }
+
         HANDLE handle = CreateFileA(_portName.c_str(), GENERIC_READ | GENERIC_WRITE, 0, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
         if (handle == INVALID_HANDLE_VALUE)
         {
@@ -285,6 +310,12 @@ namespace device_transport
         }
 
         std::lock_guard<std::mutex> lock(_nativeHandleMutex);
+        if (_closing)
+        {
+            CloseHandle(handle);
+            return TransportError::openFailed;
+        }
+
         if (_nativeHandle != nullptr)
         {
             PurgeComm(static_cast<HANDLE>(_nativeHandle), PURGE_RXABORT | PURGE_RXCLEAR | PURGE_TXABORT | PURGE_TXCLEAR);
@@ -293,6 +324,7 @@ namespace device_transport
 
         _nativeHandle = handle;
         _connectionLost = false;
+        _inputCondition.notify_all();
         return TransportError::ok;
     }
 
@@ -309,12 +341,15 @@ namespace device_transport
         CloseHandle(handle);
         _nativeHandle = nullptr;
         _connectionLost = false;
+        _inputCondition.notify_all();
     }
 
-    void SerialPort::_markConnectionLost()
+    void SerialPort::_markConnectionLost() const
     {
-        _connectionLost = true;
-        _inputCondition.notify_all();
+        if (!_connectionLost.exchange(true))
+        {
+            _inputCondition.notify_all();
+        }
     }
 
     void SerialPort::_readerLoop()
@@ -325,14 +360,24 @@ namespace device_transport
         {
             if (!isOpen())
             {
+                if (!_running || _closing)
+                {
+                    break;
+                }
+
                 _closeNativeHandle();
-                while (_running && _openNativeHandle() != TransportError::ok)
+                clearInputBuffer();
+                _inputCondition.notify_all();
+                while (_running && !_closing && _openNativeHandle() != TransportError::ok)
                 {
                     std::this_thread::sleep_for(std::chrono::milliseconds(1000));
                 }
 
-                clearInputBuffer();
-                _inputCondition.notify_all();
+                if (!_running || _closing)
+                {
+                    break;
+                }
+
                 continue;
             }
 
@@ -363,7 +408,10 @@ namespace device_transport
             {
                 {
                     std::lock_guard<std::mutex> lock(_inputMutex);
-                    _inputBuffer.insert(_inputBuffer.end(), chunk.begin(), chunk.begin() + static_cast<size_t>(receivedSize));
+                    _inputBuffer.insert(
+                        _inputBuffer.end(),
+                        chunk.begin(),
+                        chunk.begin() + static_cast<std::vector<uint8_t>::difference_type>(receivedSize));
                 }
                 _inputCondition.notify_one();
             }

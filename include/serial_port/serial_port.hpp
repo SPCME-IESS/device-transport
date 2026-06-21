@@ -23,8 +23,8 @@ namespace device_transport
         bool isOpen() const;
         void close();
 
-        uint16_t bytesToRead() const;
-        uint16_t bytesToWrite() const;
+        size_t bytesToRead() const;
+        size_t bytesToWrite() const;
         uint32_t bytesInDriverQueue() const;
         bool waitForInputSize(size_t byteCount, uint32_t timeoutMs);
 
@@ -52,6 +52,7 @@ namespace device_transport
         uint32_t _baudRate{};
 
         std::atomic<bool> _running{false};
+        std::atomic<bool> _closing{false};
         mutable std::atomic<bool> _connectionLost{false};
         std::thread _readerThread;
 
@@ -64,7 +65,7 @@ namespace device_transport
 
         TransportError _openNativeHandle();
         void _closeNativeHandle();
-        void _markConnectionLost();
+        void _markConnectionLost() const;
         void _readerLoop();
     };
 }

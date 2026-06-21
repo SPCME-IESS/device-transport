@@ -10,6 +10,31 @@
 
 namespace device_transport
 {
+    namespace
+    {
+        struct ActiveTraceCallback
+        {
+            const XBee *owner;
+            const ActiveTraceCallback *previous;
+        };
+
+        thread_local const ActiveTraceCallback *activeTraceCallback = nullptr;
+
+        bool isTraceCallbackActiveFor(const XBee *xbee)
+        {
+            const ActiveTraceCallback *current = activeTraceCallback;
+            while (current != nullptr)
+            {
+                if (current->owner == xbee)
+                {
+                    return true;
+                }
+                current = current->previous;
+            }
+            return false;
+        }
+    }
+
     namespace xbee_protocol
     {
         enum class ParseStatus : uint8_t
@@ -145,6 +170,10 @@ namespace device_transport
     TransportError XBee::open(const std::string &portName, const uint32_t baudRate, const api_frame::ApiMode apiMode)
     {
         close();
+        if (_parserThread.joinable())
+        {
+            return TransportError::openFailed;
+        }
 
         const TransportError openResult = _serialPort.open(portName, baudRate);
         if (openResult != TransportError::ok)
@@ -190,7 +219,7 @@ namespace device_transport
         _atResponseCondition.notify_all();
         _serialPort.close();
 
-        if (_parserThread.joinable())
+        if (_parserThread.joinable() && std::this_thread::get_id() != _parserThread.get_id())
         {
             _parserThread.join();
         }
@@ -238,14 +267,16 @@ namespace device_transport
         }
 
         uint8_t sendResult = 0;
+        std::vector<uint8_t> tracedOutput;
         {
             std::lock_guard<std::mutex> commandLock(_commandMutex);
             _clearFrameData();
             byte_codec::write8(_frameData, api_frame::frame_type::atCommandRequest);
             byte_codec::write8(_frameData, frameId);
             byte_codec::write16(_frameData, atCommand);
-            sendResult = _sendFrameData();
+            sendResult = _sendFrameData(tracedOutput);
         }
+        _trace(TraceDirection::tx, tracedOutput.data(), tracedOutput.size());
 
         if (sendResult != 0)
         {
@@ -326,56 +357,86 @@ namespace device_transport
 
     uint8_t XBee::atCommandRequest(const uint16_t atCommand)
     {
-        std::lock_guard<std::mutex> commandLock(_commandMutex);
-        _clearFrameData();
-        byte_codec::write8(_frameData, api_frame::frame_type::atCommandRequest);
-        byte_codec::write8(_frameData, api_frame::defaultFrameId);
-        byte_codec::write16(_frameData, atCommand);
-        return _sendFrameData();
+        std::vector<uint8_t> tracedOutput;
+        uint8_t result = 0;
+        {
+            std::lock_guard<std::mutex> commandLock(_commandMutex);
+            _clearFrameData();
+            byte_codec::write8(_frameData, api_frame::frame_type::atCommandRequest);
+            byte_codec::write8(_frameData, api_frame::defaultFrameId);
+            byte_codec::write16(_frameData, atCommand);
+            result = _sendFrameData(tracedOutput);
+        }
+        _trace(TraceDirection::tx, tracedOutput.data(), tracedOutput.size());
+        return result;
     }
 
     uint8_t XBee::atCommandRequest(const uint16_t atCommand, const uint8_t value)
     {
-        std::lock_guard<std::mutex> commandLock(_commandMutex);
-        _clearFrameData();
-        byte_codec::write8(_frameData, api_frame::frame_type::atCommandRequest);
-        byte_codec::write8(_frameData, api_frame::defaultFrameId);
-        byte_codec::write16(_frameData, atCommand);
-        byte_codec::write8(_frameData, value);
-        return _sendFrameData();
+        std::vector<uint8_t> tracedOutput;
+        uint8_t result = 0;
+        {
+            std::lock_guard<std::mutex> commandLock(_commandMutex);
+            _clearFrameData();
+            byte_codec::write8(_frameData, api_frame::frame_type::atCommandRequest);
+            byte_codec::write8(_frameData, api_frame::defaultFrameId);
+            byte_codec::write16(_frameData, atCommand);
+            byte_codec::write8(_frameData, value);
+            result = _sendFrameData(tracedOutput);
+        }
+        _trace(TraceDirection::tx, tracedOutput.data(), tracedOutput.size());
+        return result;
     }
 
     uint8_t XBee::atCommandRequest(const uint16_t atCommand, const uint16_t value)
     {
-        std::lock_guard<std::mutex> commandLock(_commandMutex);
-        _clearFrameData();
-        byte_codec::write8(_frameData, api_frame::frame_type::atCommandRequest);
-        byte_codec::write8(_frameData, api_frame::defaultFrameId);
-        byte_codec::write16(_frameData, atCommand);
-        byte_codec::write16(_frameData, value);
-        return _sendFrameData();
+        std::vector<uint8_t> tracedOutput;
+        uint8_t result = 0;
+        {
+            std::lock_guard<std::mutex> commandLock(_commandMutex);
+            _clearFrameData();
+            byte_codec::write8(_frameData, api_frame::frame_type::atCommandRequest);
+            byte_codec::write8(_frameData, api_frame::defaultFrameId);
+            byte_codec::write16(_frameData, atCommand);
+            byte_codec::write16(_frameData, value);
+            result = _sendFrameData(tracedOutput);
+        }
+        _trace(TraceDirection::tx, tracedOutput.data(), tracedOutput.size());
+        return result;
     }
 
     uint8_t XBee::atCommandRequest(const uint16_t atCommand, const uint32_t value)
     {
-        std::lock_guard<std::mutex> commandLock(_commandMutex);
-        _clearFrameData();
-        byte_codec::write8(_frameData, api_frame::frame_type::atCommandRequest);
-        byte_codec::write8(_frameData, api_frame::defaultFrameId);
-        byte_codec::write16(_frameData, atCommand);
-        byte_codec::write32(_frameData, value);
-        return _sendFrameData();
+        std::vector<uint8_t> tracedOutput;
+        uint8_t result = 0;
+        {
+            std::lock_guard<std::mutex> commandLock(_commandMutex);
+            _clearFrameData();
+            byte_codec::write8(_frameData, api_frame::frame_type::atCommandRequest);
+            byte_codec::write8(_frameData, api_frame::defaultFrameId);
+            byte_codec::write16(_frameData, atCommand);
+            byte_codec::write32(_frameData, value);
+            result = _sendFrameData(tracedOutput);
+        }
+        _trace(TraceDirection::tx, tracedOutput.data(), tracedOutput.size());
+        return result;
     }
 
     uint8_t XBee::atCommandRequest(const uint16_t atCommand, const uint64_t value)
     {
-        std::lock_guard<std::mutex> commandLock(_commandMutex);
-        _clearFrameData();
-        byte_codec::write8(_frameData, api_frame::frame_type::atCommandRequest);
-        byte_codec::write8(_frameData, api_frame::defaultFrameId);
-        byte_codec::write16(_frameData, atCommand);
-        byte_codec::write64(_frameData, value);
-        return _sendFrameData();
+        std::vector<uint8_t> tracedOutput;
+        uint8_t result = 0;
+        {
+            std::lock_guard<std::mutex> commandLock(_commandMutex);
+            _clearFrameData();
+            byte_codec::write8(_frameData, api_frame::frame_type::atCommandRequest);
+            byte_codec::write8(_frameData, api_frame::defaultFrameId);
+            byte_codec::write16(_frameData, atCommand);
+            byte_codec::write64(_frameData, value);
+            result = _sendFrameData(tracedOutput);
+        }
+        _trace(TraceDirection::tx, tracedOutput.data(), tracedOutput.size());
+        return result;
     }
 
     uint8_t XBee::remoteAtCommandRequest(
@@ -383,15 +444,21 @@ namespace device_transport
         const uint16_t destinationXbee16Id,
         const uint16_t atCommand)
     {
-        std::lock_guard<std::mutex> lock(_commandMutex);
-        _clearFrameData();
-        byte_codec::write8(_frameData, api_frame::frame_type::remoteAtCommandRequest);
-        byte_codec::write8(_frameData, api_frame::defaultFrameId);
-        byte_codec::write64(_frameData, destinationXbee64Id);
-        byte_codec::write16(_frameData, destinationXbee16Id);
-        byte_codec::write8(_frameData, api_frame::remoteCommandOptionsApplyChanges);
-        byte_codec::write16(_frameData, atCommand);
-        return _sendFrameData();
+        std::vector<uint8_t> tracedOutput;
+        uint8_t result = 0;
+        {
+            std::lock_guard<std::mutex> lock(_commandMutex);
+            _clearFrameData();
+            byte_codec::write8(_frameData, api_frame::frame_type::remoteAtCommandRequest);
+            byte_codec::write8(_frameData, api_frame::defaultFrameId);
+            byte_codec::write64(_frameData, destinationXbee64Id);
+            byte_codec::write16(_frameData, destinationXbee16Id);
+            byte_codec::write8(_frameData, api_frame::remoteCommandOptionsApplyChanges);
+            byte_codec::write16(_frameData, atCommand);
+            result = _sendFrameData(tracedOutput);
+        }
+        _trace(TraceDirection::tx, tracedOutput.data(), tracedOutput.size());
+        return result;
     }
 
     uint8_t XBee::remoteAtCommandRequest(
@@ -400,16 +467,22 @@ namespace device_transport
         const uint16_t atCommand,
         const uint8_t value)
     {
-        std::lock_guard<std::mutex> lock(_commandMutex);
-        _clearFrameData();
-        byte_codec::write8(_frameData, api_frame::frame_type::remoteAtCommandRequest);
-        byte_codec::write8(_frameData, api_frame::defaultFrameId);
-        byte_codec::write64(_frameData, destinationXbee64Id);
-        byte_codec::write16(_frameData, destinationXbee16Id);
-        byte_codec::write8(_frameData, api_frame::remoteCommandOptionsApplyChanges);
-        byte_codec::write16(_frameData, atCommand);
-        byte_codec::write8(_frameData, value);
-        return _sendFrameData();
+        std::vector<uint8_t> tracedOutput;
+        uint8_t result = 0;
+        {
+            std::lock_guard<std::mutex> lock(_commandMutex);
+            _clearFrameData();
+            byte_codec::write8(_frameData, api_frame::frame_type::remoteAtCommandRequest);
+            byte_codec::write8(_frameData, api_frame::defaultFrameId);
+            byte_codec::write64(_frameData, destinationXbee64Id);
+            byte_codec::write16(_frameData, destinationXbee16Id);
+            byte_codec::write8(_frameData, api_frame::remoteCommandOptionsApplyChanges);
+            byte_codec::write16(_frameData, atCommand);
+            byte_codec::write8(_frameData, value);
+            result = _sendFrameData(tracedOutput);
+        }
+        _trace(TraceDirection::tx, tracedOutput.data(), tracedOutput.size());
+        return result;
     }
 
     uint8_t XBee::remoteAtCommandRequest(
@@ -418,16 +491,22 @@ namespace device_transport
         const uint16_t atCommand,
         const uint16_t value)
     {
-        std::lock_guard<std::mutex> lock(_commandMutex);
-        _clearFrameData();
-        byte_codec::write8(_frameData, api_frame::frame_type::remoteAtCommandRequest);
-        byte_codec::write8(_frameData, api_frame::defaultFrameId);
-        byte_codec::write64(_frameData, destinationXbee64Id);
-        byte_codec::write16(_frameData, destinationXbee16Id);
-        byte_codec::write8(_frameData, api_frame::remoteCommandOptionsApplyChanges);
-        byte_codec::write16(_frameData, atCommand);
-        byte_codec::write16(_frameData, value);
-        return _sendFrameData();
+        std::vector<uint8_t> tracedOutput;
+        uint8_t result = 0;
+        {
+            std::lock_guard<std::mutex> lock(_commandMutex);
+            _clearFrameData();
+            byte_codec::write8(_frameData, api_frame::frame_type::remoteAtCommandRequest);
+            byte_codec::write8(_frameData, api_frame::defaultFrameId);
+            byte_codec::write64(_frameData, destinationXbee64Id);
+            byte_codec::write16(_frameData, destinationXbee16Id);
+            byte_codec::write8(_frameData, api_frame::remoteCommandOptionsApplyChanges);
+            byte_codec::write16(_frameData, atCommand);
+            byte_codec::write16(_frameData, value);
+            result = _sendFrameData(tracedOutput);
+        }
+        _trace(TraceDirection::tx, tracedOutput.data(), tracedOutput.size());
+        return result;
     }
 
     uint8_t XBee::remoteAtCommandRequest(
@@ -436,16 +515,22 @@ namespace device_transport
         const uint16_t atCommand,
         const uint32_t value)
     {
-        std::lock_guard<std::mutex> lock(_commandMutex);
-        _clearFrameData();
-        byte_codec::write8(_frameData, api_frame::frame_type::remoteAtCommandRequest);
-        byte_codec::write8(_frameData, api_frame::defaultFrameId);
-        byte_codec::write64(_frameData, destinationXbee64Id);
-        byte_codec::write16(_frameData, destinationXbee16Id);
-        byte_codec::write8(_frameData, api_frame::remoteCommandOptionsApplyChanges);
-        byte_codec::write16(_frameData, atCommand);
-        byte_codec::write32(_frameData, value);
-        return _sendFrameData();
+        std::vector<uint8_t> tracedOutput;
+        uint8_t result = 0;
+        {
+            std::lock_guard<std::mutex> lock(_commandMutex);
+            _clearFrameData();
+            byte_codec::write8(_frameData, api_frame::frame_type::remoteAtCommandRequest);
+            byte_codec::write8(_frameData, api_frame::defaultFrameId);
+            byte_codec::write64(_frameData, destinationXbee64Id);
+            byte_codec::write16(_frameData, destinationXbee16Id);
+            byte_codec::write8(_frameData, api_frame::remoteCommandOptionsApplyChanges);
+            byte_codec::write16(_frameData, atCommand);
+            byte_codec::write32(_frameData, value);
+            result = _sendFrameData(tracedOutput);
+        }
+        _trace(TraceDirection::tx, tracedOutput.data(), tracedOutput.size());
+        return result;
     }
 
     uint8_t XBee::remoteAtCommandRequest(
@@ -454,16 +539,22 @@ namespace device_transport
         const uint16_t atCommand,
         const uint64_t value)
     {
-        std::lock_guard<std::mutex> lock(_commandMutex);
-        _clearFrameData();
-        byte_codec::write8(_frameData, api_frame::frame_type::remoteAtCommandRequest);
-        byte_codec::write8(_frameData, api_frame::defaultFrameId);
-        byte_codec::write64(_frameData, destinationXbee64Id);
-        byte_codec::write16(_frameData, destinationXbee16Id);
-        byte_codec::write8(_frameData, api_frame::remoteCommandOptionsApplyChanges);
-        byte_codec::write16(_frameData, atCommand);
-        byte_codec::write64(_frameData, value);
-        return _sendFrameData();
+        std::vector<uint8_t> tracedOutput;
+        uint8_t result = 0;
+        {
+            std::lock_guard<std::mutex> lock(_commandMutex);
+            _clearFrameData();
+            byte_codec::write8(_frameData, api_frame::frame_type::remoteAtCommandRequest);
+            byte_codec::write8(_frameData, api_frame::defaultFrameId);
+            byte_codec::write64(_frameData, destinationXbee64Id);
+            byte_codec::write16(_frameData, destinationXbee16Id);
+            byte_codec::write8(_frameData, api_frame::remoteCommandOptionsApplyChanges);
+            byte_codec::write16(_frameData, atCommand);
+            byte_codec::write64(_frameData, value);
+            result = _sendFrameData(tracedOutput);
+        }
+        _trace(TraceDirection::tx, tracedOutput.data(), tracedOutput.size());
+        return result;
     }
 
     uint8_t XBee::transmitRequest(
@@ -488,16 +579,22 @@ namespace device_transport
         const uint8_t broadcastRadius,
         const uint8_t options)
     {
-        std::lock_guard<std::mutex> lock(_commandMutex);
-        _clearFrameData();
-        byte_codec::write8(_frameData, api_frame::frame_type::transmitRequest);
-        byte_codec::write8(_frameData, api_frame::defaultFrameId);
-        byte_codec::write64(_frameData, destinationXbee64Id);
-        byte_codec::write16(_frameData, destinationXbee16Id);
-        byte_codec::write8(_frameData, broadcastRadius);
-        byte_codec::write8(_frameData, options);
-        _frameData.insert(_frameData.end(), payload.begin(), payload.end());
-        return _sendFrameData();
+        std::vector<uint8_t> tracedOutput;
+        uint8_t result = 0;
+        {
+            std::lock_guard<std::mutex> lock(_commandMutex);
+            _clearFrameData();
+            byte_codec::write8(_frameData, api_frame::frame_type::transmitRequest);
+            byte_codec::write8(_frameData, api_frame::defaultFrameId);
+            byte_codec::write64(_frameData, destinationXbee64Id);
+            byte_codec::write16(_frameData, destinationXbee16Id);
+            byte_codec::write8(_frameData, broadcastRadius);
+            byte_codec::write8(_frameData, options);
+            _frameData.insert(_frameData.end(), payload.begin(), payload.end());
+            result = _sendFrameData(tracedOutput);
+        }
+        _trace(TraceDirection::tx, tracedOutput.data(), tracedOutput.size());
+        return result;
     }
 
     void XBee::clearOutputPayload()
@@ -572,8 +669,20 @@ namespace device_transport
 
     void XBee::setTraceCallback(const XBeeTraceCallback callback, void *userData)
     {
+        std::unique_lock<std::mutex> lock(_traceMutex);
         _traceCallback = callback;
         _traceUserData = userData;
+
+        if (callback == nullptr)
+        {
+            if (isTraceCallbackActiveFor(this))
+            {
+                return;
+            }
+
+            _traceCondition.wait(lock, [this]
+                                 { return _activeTraceCallbacks == 0; });
+        }
     }
 
     void XBee::_clearFrameData()
@@ -596,8 +705,10 @@ namespace device_transport
         return frameId;
     }
 
-    uint8_t XBee::_sendFrameData()
+    uint8_t XBee::_sendFrameData(std::vector<uint8_t> &tracedOutput)
     {
+        tracedOutput.clear();
+
         std::vector<uint8_t> frame;
         if (!xbee_protocol::buildFrame(frame, _frameData))
         {
@@ -619,8 +730,8 @@ namespace device_transport
         }
 
         const uint32_t writtenSize = _serialPort.send();
-        _trace(TraceDirection::tx, output.data(), output.size());
-        return writtenSize == output.size() ? 0 : 1;
+        tracedOutput.swap(output);
+        return writtenSize == tracedOutput.size() ? 0 : 1;
     }
 
     void XBee::_appendEscapedByte(std::vector<uint8_t> &output, const uint8_t byte) const
@@ -636,11 +747,34 @@ namespace device_transport
         output.push_back(byte);
     }
 
-    void XBee::_trace(const TraceDirection direction, const uint8_t *bytes, const size_t size) const
+    void XBee::_trace(const TraceDirection direction, const uint8_t *bytes, const size_t size)
     {
-        if (_traceCallback != nullptr && bytes != nullptr && size != 0)
+        XBeeTraceCallback callback = nullptr;
+        void *userData = nullptr;
         {
-            _traceCallback(direction, bytes, size, _traceUserData);
+            std::unique_lock<std::mutex> lock(_traceMutex);
+            callback = _traceCallback;
+            userData = _traceUserData;
+
+            if (callback == nullptr || bytes == nullptr || size == 0)
+            {
+                return;
+            }
+
+            ++_activeTraceCallbacks;
+        }
+
+        const ActiveTraceCallback currentTraceCallback{this, activeTraceCallback};
+        activeTraceCallback = &currentTraceCallback;
+
+        callback(direction, bytes, size, userData);
+
+        activeTraceCallback = currentTraceCallback.previous;
+
+        {
+            std::unique_lock<std::mutex> lock(_traceMutex);
+            --_activeTraceCallbacks;
+            _traceCondition.notify_all();
         }
     }
 
@@ -650,22 +784,35 @@ namespace device_transport
         bool insideFrame = false;
         bool escapeNext = false;
 
+        const auto resetParserState = [&parser, &insideFrame, &escapeNext]
+        {
+            parser.reset();
+            insideFrame = false;
+            escapeNext = false;
+        };
+
         while (_running)
         {
             if (!_serialPort.isOpen())
             {
+                resetParserState();
                 std::this_thread::sleep_for(std::chrono::milliseconds(100));
                 continue;
             }
 
             if (!_serialPort.waitForInputSize(1, 100))
             {
+                if (!_serialPort.isOpen())
+                {
+                    resetParserState();
+                }
                 continue;
             }
 
             while (_running && _serialPort.bytesToRead() > 0)
             {
                 uint8_t byte = _serialPort.read8();
+
                 if (byte == api_frame::startDelimiter)
                 {
                     if (_apiMode == api_frame::ApiMode::api2)
@@ -720,16 +867,20 @@ namespace device_transport
 
                 if (frameType == api_frame::frame_type::atCommandResponse && frame.size >= 5)
                 {
-                    const uint8_t frameId = frame.data[1];
-                    const uint16_t atCommand = byte_codec::read16(frameData, 2);
-                    const uint8_t commandStatus = frame.data[4];
-                    std::vector<uint8_t> commandData(frame.data + 5, frame.data + frame.size);
+                    AtCommandResponse response;
+                    response.frameId = frame.data[1];
+                    response.atCommand = byte_codec::read16(frameData, 2);
+                    response.status = frame.data[4];
+                    response.value.assign(frame.data + 5, frame.data + frame.size);
+
                     {
                         std::lock_guard<std::mutex> responseLock(_atResponseMutex);
-                        if (_pendingAtResponse && _pendingAtFrameId == frameId && _pendingAtCommand == atCommand)
+                        if (_pendingAtResponse &&
+                            _pendingAtFrameId == response.frameId &&
+                            _pendingAtCommand == response.atCommand)
                         {
-                            _pendingAtStatus = commandStatus;
-                            _pendingAtData = std::move(commandData);
+                            _pendingAtStatus = response.status;
+                            _pendingAtData = std::move(response.value);
                             _pendingAtResponseCompleted = true;
                             _atResponseCondition.notify_all();
                         }
