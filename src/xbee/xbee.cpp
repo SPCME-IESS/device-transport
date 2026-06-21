@@ -204,13 +204,7 @@ namespace device_transport
             return nodeJoinResult;
         }
 
-        const uint8_t applyResult = atCommandRequest(at_command::ac);
-        if (applyResult != 0)
-        {
-            return applyResult;
-        }
-
-        return atCommandRequest(at_command::cb, static_cast<uint8_t>(2));
+        return atCommandRequest(at_command::ac);
     }
 
     uint8_t XBee::closeJoinWindow()
@@ -243,13 +237,26 @@ namespace device_transport
             _pendingAtData.clear();
         }
 
+        uint8_t sendResult = 0;
         {
             std::lock_guard<std::mutex> commandLock(_commandMutex);
             _clearFrameData();
             byte_codec::write8(_frameData, api_frame::frame_type::atCommandRequest);
             byte_codec::write8(_frameData, frameId);
             byte_codec::write16(_frameData, atCommand);
-            _sendFrameData();
+            sendResult = _sendFrameData();
+        }
+
+        if (sendResult != 0)
+        {
+            std::lock_guard<std::mutex> responseLock(_atResponseMutex);
+            _pendingAtResponse = false;
+            _pendingAtResponseCompleted = false;
+            _pendingAtFrameId = 0;
+            _pendingAtCommand = 0;
+            _pendingAtStatus = 0xFF;
+            _pendingAtData.clear();
+            return false;
         }
 
         std::unique_lock<std::mutex> responseLock(_atResponseMutex);

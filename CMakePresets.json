@@ -1,9 +1,10 @@
 {
-    "version": 6,
+    "version": 2,
     "configurePresets": [
         {
             "name": "default",
             "displayName": "Default",
+            "generator": "Ninja",
             "binaryDir": "${sourceDir}/build/default",
             "cacheVariables": {
                 "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"

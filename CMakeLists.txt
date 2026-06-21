@@ -20,7 +20,7 @@ target_compile_features(device_transport_core
 target_include_directories(device_transport_core
     INTERFACE
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-        $<INSTALL_INTERFACE:include>
+        $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
 
 set_target_properties(device_transport_core
@@ -76,7 +76,7 @@ add_library(device_transport::device_transport ALIAS device_transport)
 
 target_link_libraries(device_transport
     INTERFACE
-        device_transport_desktop
+        device_transport::desktop
 )
 
 set_target_properties(device_transport
@@ -101,6 +101,7 @@ install(DIRECTORY include/
 )
 
 install(EXPORT device_transportTargets
+    FILE device_transportTargets.cmake
     NAMESPACE device_transport::
     DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/device_transport
 )
@@ -121,4 +122,8 @@ install(FILES
     ${CMAKE_CURRENT_BINARY_DIR}/device_transportConfig.cmake
     ${CMAKE_CURRENT_BINARY_DIR}/device_transportConfigVersion.cmake
     DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/device_transport
+)
+
+install(FILES LICENSE
+    DESTINATION ${CMAKE_INSTALL_DATADIR}/licenses/device_transport
 )
