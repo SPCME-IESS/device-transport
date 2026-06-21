@@ -815,10 +815,7 @@ namespace device_transport
 
                 if (byte == api_frame::startDelimiter)
                 {
-                    if (_apiMode == api_frame::ApiMode::api2)
-                    {
-                        parser.reset();
-                    }
+                    parser.reset();
                     insideFrame = true;
                     escapeNext = false;
                 }
