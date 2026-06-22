@@ -30,7 +30,7 @@ set_target_properties(device_transport_core
         EXPORT_NAME core
 )
 
-add_library(device_transport_serial
+add_library(device_transport_serial STATIC
     src/serial_port/serial_port.cpp
 )
 
@@ -51,7 +51,7 @@ set_target_properties(device_transport_serial
         EXPORT_NAME serial
 )
 
-add_library(device_transport_desktop
+add_library(device_transport_desktop STATIC
     src/xbee/xbee.cpp
 )
 
