@@ -134,7 +134,7 @@ namespace device_transport
             return 0;
         }
 
-        const uint16_t value = byte_codec::read16(_inputBuffer);
+        const uint16_t value = byte_codec::read16BigEndian(_inputBuffer);
         _inputBuffer.erase(_inputBuffer.begin(), _inputBuffer.begin() + 2);
         return value;
     }
@@ -147,7 +147,7 @@ namespace device_transport
             return 0;
         }
 
-        const uint32_t value = byte_codec::read32(_inputBuffer);
+        const uint32_t value = byte_codec::read32BigEndian(_inputBuffer);
         _inputBuffer.erase(_inputBuffer.begin(), _inputBuffer.begin() + 4);
         return value;
     }
@@ -160,7 +160,7 @@ namespace device_transport
             return 0;
         }
 
-        const uint64_t value = byte_codec::read64(_inputBuffer);
+        const uint64_t value = byte_codec::read64BigEndian(_inputBuffer);
         _inputBuffer.erase(_inputBuffer.begin(), _inputBuffer.begin() + 8);
         return value;
     }
@@ -175,21 +175,21 @@ namespace device_transport
     uint32_t SerialPort::write16(const uint16_t value)
     {
         std::lock_guard<std::mutex> lock(_outputMutex);
-        byte_codec::write16(_outputBuffer, value);
+        byte_codec::write16BigEndian(_outputBuffer, value);
         return 2;
     }
 
     uint32_t SerialPort::write32(const uint32_t value)
     {
         std::lock_guard<std::mutex> lock(_outputMutex);
-        byte_codec::write32(_outputBuffer, value);
+        byte_codec::write32BigEndian(_outputBuffer, value);
         return 4;
     }
 
     uint32_t SerialPort::write64(const uint64_t value)
     {
         std::lock_guard<std::mutex> lock(_outputMutex);
-        byte_codec::write64(_outputBuffer, value);
+        byte_codec::write64BigEndian(_outputBuffer, value);
         return 8;
     }
 

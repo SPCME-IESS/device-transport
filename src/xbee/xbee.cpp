@@ -273,7 +273,7 @@ namespace device_transport
             _clearFrameData();
             byte_codec::write8(_frameData, api_frame::frame_type::atCommandRequest);
             byte_codec::write8(_frameData, frameId);
-            byte_codec::write16(_frameData, atCommand);
+            byte_codec::write16BigEndian(_frameData, atCommand);
             sendResult = _sendFrameData(tracedOutput);
         }
         _trace(TraceDirection::tx, tracedOutput.data(), tracedOutput.size());
@@ -327,7 +327,7 @@ namespace device_transport
             return false;
         }
 
-        value = byte_codec::read16(data);
+        value = byte_codec::read16BigEndian(data);
         return true;
     }
 
@@ -339,7 +339,7 @@ namespace device_transport
             return false;
         }
 
-        value = byte_codec::read32(data);
+        value = byte_codec::read32BigEndian(data);
         return true;
     }
 
@@ -351,7 +351,7 @@ namespace device_transport
             return false;
         }
 
-        value = byte_codec::read64(data);
+        value = byte_codec::read64BigEndian(data);
         return true;
     }
 
@@ -364,7 +364,7 @@ namespace device_transport
             _clearFrameData();
             byte_codec::write8(_frameData, api_frame::frame_type::atCommandRequest);
             byte_codec::write8(_frameData, api_frame::defaultFrameId);
-            byte_codec::write16(_frameData, atCommand);
+            byte_codec::write16BigEndian(_frameData, atCommand);
             result = _sendFrameData(tracedOutput);
         }
         _trace(TraceDirection::tx, tracedOutput.data(), tracedOutput.size());
@@ -380,7 +380,7 @@ namespace device_transport
             _clearFrameData();
             byte_codec::write8(_frameData, api_frame::frame_type::atCommandRequest);
             byte_codec::write8(_frameData, api_frame::defaultFrameId);
-            byte_codec::write16(_frameData, atCommand);
+            byte_codec::write16BigEndian(_frameData, atCommand);
             byte_codec::write8(_frameData, value);
             result = _sendFrameData(tracedOutput);
         }
@@ -397,8 +397,8 @@ namespace device_transport
             _clearFrameData();
             byte_codec::write8(_frameData, api_frame::frame_type::atCommandRequest);
             byte_codec::write8(_frameData, api_frame::defaultFrameId);
-            byte_codec::write16(_frameData, atCommand);
-            byte_codec::write16(_frameData, value);
+            byte_codec::write16BigEndian(_frameData, atCommand);
+            byte_codec::write16BigEndian(_frameData, value);
             result = _sendFrameData(tracedOutput);
         }
         _trace(TraceDirection::tx, tracedOutput.data(), tracedOutput.size());
@@ -414,8 +414,8 @@ namespace device_transport
             _clearFrameData();
             byte_codec::write8(_frameData, api_frame::frame_type::atCommandRequest);
             byte_codec::write8(_frameData, api_frame::defaultFrameId);
-            byte_codec::write16(_frameData, atCommand);
-            byte_codec::write32(_frameData, value);
+            byte_codec::write16BigEndian(_frameData, atCommand);
+            byte_codec::write32BigEndian(_frameData, value);
             result = _sendFrameData(tracedOutput);
         }
         _trace(TraceDirection::tx, tracedOutput.data(), tracedOutput.size());
@@ -431,8 +431,8 @@ namespace device_transport
             _clearFrameData();
             byte_codec::write8(_frameData, api_frame::frame_type::atCommandRequest);
             byte_codec::write8(_frameData, api_frame::defaultFrameId);
-            byte_codec::write16(_frameData, atCommand);
-            byte_codec::write64(_frameData, value);
+            byte_codec::write16BigEndian(_frameData, atCommand);
+            byte_codec::write64BigEndian(_frameData, value);
             result = _sendFrameData(tracedOutput);
         }
         _trace(TraceDirection::tx, tracedOutput.data(), tracedOutput.size());
@@ -451,10 +451,10 @@ namespace device_transport
             _clearFrameData();
             byte_codec::write8(_frameData, api_frame::frame_type::remoteAtCommandRequest);
             byte_codec::write8(_frameData, api_frame::defaultFrameId);
-            byte_codec::write64(_frameData, destinationXbee64Id);
-            byte_codec::write16(_frameData, destinationXbee16Id);
+            byte_codec::write64BigEndian(_frameData, destinationXbee64Id);
+            byte_codec::write16BigEndian(_frameData, destinationXbee16Id);
             byte_codec::write8(_frameData, api_frame::remoteCommandOptionsApplyChanges);
-            byte_codec::write16(_frameData, atCommand);
+            byte_codec::write16BigEndian(_frameData, atCommand);
             result = _sendFrameData(tracedOutput);
         }
         _trace(TraceDirection::tx, tracedOutput.data(), tracedOutput.size());
@@ -474,10 +474,10 @@ namespace device_transport
             _clearFrameData();
             byte_codec::write8(_frameData, api_frame::frame_type::remoteAtCommandRequest);
             byte_codec::write8(_frameData, api_frame::defaultFrameId);
-            byte_codec::write64(_frameData, destinationXbee64Id);
-            byte_codec::write16(_frameData, destinationXbee16Id);
+            byte_codec::write64BigEndian(_frameData, destinationXbee64Id);
+            byte_codec::write16BigEndian(_frameData, destinationXbee16Id);
             byte_codec::write8(_frameData, api_frame::remoteCommandOptionsApplyChanges);
-            byte_codec::write16(_frameData, atCommand);
+            byte_codec::write16BigEndian(_frameData, atCommand);
             byte_codec::write8(_frameData, value);
             result = _sendFrameData(tracedOutput);
         }
@@ -498,11 +498,11 @@ namespace device_transport
             _clearFrameData();
             byte_codec::write8(_frameData, api_frame::frame_type::remoteAtCommandRequest);
             byte_codec::write8(_frameData, api_frame::defaultFrameId);
-            byte_codec::write64(_frameData, destinationXbee64Id);
-            byte_codec::write16(_frameData, destinationXbee16Id);
+            byte_codec::write64BigEndian(_frameData, destinationXbee64Id);
+            byte_codec::write16BigEndian(_frameData, destinationXbee16Id);
             byte_codec::write8(_frameData, api_frame::remoteCommandOptionsApplyChanges);
-            byte_codec::write16(_frameData, atCommand);
-            byte_codec::write16(_frameData, value);
+            byte_codec::write16BigEndian(_frameData, atCommand);
+            byte_codec::write16BigEndian(_frameData, value);
             result = _sendFrameData(tracedOutput);
         }
         _trace(TraceDirection::tx, tracedOutput.data(), tracedOutput.size());
@@ -522,11 +522,11 @@ namespace device_transport
             _clearFrameData();
             byte_codec::write8(_frameData, api_frame::frame_type::remoteAtCommandRequest);
             byte_codec::write8(_frameData, api_frame::defaultFrameId);
-            byte_codec::write64(_frameData, destinationXbee64Id);
-            byte_codec::write16(_frameData, destinationXbee16Id);
+            byte_codec::write64BigEndian(_frameData, destinationXbee64Id);
+            byte_codec::write16BigEndian(_frameData, destinationXbee16Id);
             byte_codec::write8(_frameData, api_frame::remoteCommandOptionsApplyChanges);
-            byte_codec::write16(_frameData, atCommand);
-            byte_codec::write32(_frameData, value);
+            byte_codec::write16BigEndian(_frameData, atCommand);
+            byte_codec::write32BigEndian(_frameData, value);
             result = _sendFrameData(tracedOutput);
         }
         _trace(TraceDirection::tx, tracedOutput.data(), tracedOutput.size());
@@ -546,11 +546,11 @@ namespace device_transport
             _clearFrameData();
             byte_codec::write8(_frameData, api_frame::frame_type::remoteAtCommandRequest);
             byte_codec::write8(_frameData, api_frame::defaultFrameId);
-            byte_codec::write64(_frameData, destinationXbee64Id);
-            byte_codec::write16(_frameData, destinationXbee16Id);
+            byte_codec::write64BigEndian(_frameData, destinationXbee64Id);
+            byte_codec::write16BigEndian(_frameData, destinationXbee16Id);
             byte_codec::write8(_frameData, api_frame::remoteCommandOptionsApplyChanges);
-            byte_codec::write16(_frameData, atCommand);
-            byte_codec::write64(_frameData, value);
+            byte_codec::write16BigEndian(_frameData, atCommand);
+            byte_codec::write64BigEndian(_frameData, value);
             result = _sendFrameData(tracedOutput);
         }
         _trace(TraceDirection::tx, tracedOutput.data(), tracedOutput.size());
@@ -586,8 +586,8 @@ namespace device_transport
             _clearFrameData();
             byte_codec::write8(_frameData, api_frame::frame_type::transmitRequest);
             byte_codec::write8(_frameData, api_frame::defaultFrameId);
-            byte_codec::write64(_frameData, destinationXbee64Id);
-            byte_codec::write16(_frameData, destinationXbee16Id);
+            byte_codec::write64BigEndian(_frameData, destinationXbee64Id);
+            byte_codec::write16BigEndian(_frameData, destinationXbee16Id);
             byte_codec::write8(_frameData, broadcastRadius);
             byte_codec::write8(_frameData, options);
             _frameData.insert(_frameData.end(), payload.begin(), payload.end());
@@ -612,19 +612,19 @@ namespace device_transport
     void XBee::write16(const uint16_t input)
     {
         std::lock_guard<std::mutex> lock(_outputPayloadMutex);
-        byte_codec::write16(_outputPayload, input);
+        byte_codec::write16BigEndian(_outputPayload, input);
     }
 
     void XBee::write32(const uint32_t input)
     {
         std::lock_guard<std::mutex> lock(_outputPayloadMutex);
-        byte_codec::write32(_outputPayload, input);
+        byte_codec::write32BigEndian(_outputPayload, input);
     }
 
     void XBee::write64(const uint64_t input)
     {
         std::lock_guard<std::mutex> lock(_outputPayloadMutex);
-        byte_codec::write64(_outputPayload, input);
+        byte_codec::write64BigEndian(_outputPayload, input);
     }
 
     std::vector<ReceivedXBeeFrame> XBee::getParsedInputPayload()
@@ -866,7 +866,7 @@ namespace device_transport
                 {
                     AtCommandResponse response;
                     response.frameId = frame.data[1];
-                    response.atCommand = byte_codec::read16(frameData, 2);
+                    response.atCommand = byte_codec::read16BigEndian(frameData, 2);
                     response.status = frame.data[4];
                     response.value.assign(frame.data + 5, frame.data + frame.size);
 
@@ -889,8 +889,8 @@ namespace device_transport
                 if (frameType == api_frame::frame_type::receivePacket && frame.size >= 12)
                 {
                     ReceivedXBeeFrame payload;
-                    payload.xbee64Id = byte_codec::read64(frameData, 1);
-                    payload.xbee16Id = byte_codec::read16(frameData, 9);
+                    payload.xbee64Id = byte_codec::read64BigEndian(frameData, 1);
+                    payload.xbee16Id = byte_codec::read16BigEndian(frameData, 9);
                     payload.receiveOptions = frame.data[11];
                     payload.payload.assign(frame.data + 12, frame.data + frame.size);
                     {
@@ -904,8 +904,8 @@ namespace device_transport
                 if (frameType == api_frame::frame_type::explicitReceiveIndicator && frame.size >= 18)
                 {
                     ReceivedXBeeFrame payload;
-                    payload.xbee64Id = byte_codec::read64(frameData, 1);
-                    payload.xbee16Id = byte_codec::read16(frameData, 9);
+                    payload.xbee64Id = byte_codec::read64BigEndian(frameData, 1);
+                    payload.xbee16Id = byte_codec::read16BigEndian(frameData, 9);
                     payload.receiveOptions = frame.data[17];
                     payload.payload.assign(frame.data + 18, frame.data + frame.size);
                     {

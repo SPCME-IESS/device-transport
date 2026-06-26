@@ -108,7 +108,7 @@ if (xbee.open("\\\\.\\COM5", 9600) != device_transport::TransportError::ok)
 
 std::vector<uint8_t> payload;
 device_transport::byte_codec::write8(payload, 0x01);
-device_transport::byte_codec::write16(payload, 0x0800);
+device_transport::byte_codec::write16BigEndian(payload, 0x0800);
 
 xbee.transmitRequest(
     0x0013A20000000000ULL,
