@@ -813,7 +813,18 @@ namespace device_transport
             {
                 uint8_t byte = _serialPort.read8();
 
-                if (byte == api_frame::startDelimiter)
+                if (!insideFrame)
+                {
+                    if (byte != api_frame::startDelimiter)
+                    {
+                        continue;
+                    }
+
+                    parser.reset();
+                    insideFrame = true;
+                    escapeNext = false;
+                }
+                else if (_apiMode == api_frame::ApiMode::api2 && byte == api_frame::startDelimiter)
                 {
                     parser.reset();
                     insideFrame = true;
