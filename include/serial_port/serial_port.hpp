@@ -23,10 +23,10 @@ namespace device_transport
         bool isOpen() const;
         void close();
 
-        size_t bytesToRead() const;
-        size_t bytesToWrite() const;
+        std::size_t bytesToRead() const;
+        std::size_t bytesToWrite() const;
         uint32_t bytesInDriverQueue() const;
-        bool waitForInputSize(size_t byteCount, uint32_t timeoutMs);
+        bool waitForInputSize(std::size_t byteCount, uint32_t timeoutMs);
 
         uint8_t read8();
         uint16_t read16();

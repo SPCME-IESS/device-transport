@@ -48,13 +48,13 @@ namespace device_transport
         struct FrameView
         {
             const uint8_t *data{};
-            size_t size{};
+            std::size_t size{};
         };
 
-        uint8_t calculateChecksum(const uint8_t *frameData, const size_t size)
+        uint8_t calculateChecksum(const uint8_t *frameData, const std::size_t size)
         {
             uint16_t sum = 0;
-            for (size_t i = 0; i < size; ++i)
+            for (std::size_t i = 0; i < size; ++i)
             {
                 sum += frameData[i];
             }
@@ -78,7 +78,7 @@ namespace device_transport
             return true;
         }
 
-        template <size_t FrameCapacity>
+        template <std::size_t FrameCapacity>
         class FrameParser
         {
         public:
@@ -157,7 +157,7 @@ namespace device_transport
 
             uint8_t _buffer[FrameCapacity]{};
             uint16_t _length{};
-            size_t _size{};
+            std::size_t _size{};
             State _state{State::waitStart};
         };
     }
@@ -718,7 +718,7 @@ namespace device_transport
         std::vector<uint8_t> output;
         output.reserve(frame.size() * 2);
         output.push_back(api_frame::startDelimiter);
-        for (size_t i = 1; i < frame.size(); ++i)
+        for (std::size_t i = 1; i < frame.size(); ++i)
         {
             _appendEscapedByte(output, frame[i]);
         }
@@ -747,7 +747,7 @@ namespace device_transport
         output.push_back(byte);
     }
 
-    void XBee::_trace(const TraceDirection direction, const uint8_t *bytes, const size_t size)
+    void XBee::_trace(const TraceDirection direction, const uint8_t *bytes, const std::size_t size)
     {
         XBeeTraceCallback callback = nullptr;
         void *userData = nullptr;

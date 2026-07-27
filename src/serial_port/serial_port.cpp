@@ -67,13 +67,13 @@ namespace device_transport
         }
     }
 
-    size_t SerialPort::bytesToRead() const
+    std::size_t SerialPort::bytesToRead() const
     {
         std::lock_guard<std::mutex> lock(_inputMutex);
         return _inputBuffer.size();
     }
 
-    size_t SerialPort::bytesToWrite() const
+    std::size_t SerialPort::bytesToWrite() const
     {
         std::lock_guard<std::mutex> lock(_outputMutex);
         return _outputBuffer.size();
@@ -98,7 +98,7 @@ namespace device_transport
         return static_cast<uint32_t>(status.cbInQue);
     }
 
-    bool SerialPort::waitForInputSize(const size_t byteCount, const uint32_t timeoutMs)
+    bool SerialPort::waitForInputSize(const std::size_t byteCount, const uint32_t timeoutMs)
     {
         std::unique_lock<std::mutex> lock(_inputMutex);
         if (timeoutMs == 0)
@@ -389,7 +389,7 @@ namespace device_transport
             }
 
             DWORD receivedSize = 0;
-            const DWORD bytesToRead = static_cast<DWORD>(std::min<size_t>(chunk.size(), queuedBytes));
+            const DWORD bytesToRead = static_cast<DWORD>(std::min<std::size_t>(chunk.size(), queuedBytes));
             {
                 std::lock_guard<std::mutex> nativeLock(_nativeHandleMutex);
                 if (_nativeHandle == nullptr || _connectionLost)

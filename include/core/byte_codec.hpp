@@ -9,17 +9,17 @@ namespace device_transport
 {
     namespace byte_codec
     {
-        inline uint8_t read8(const std::vector<uint8_t> &bytes, const size_t offset = 0)
+        inline uint8_t read8(const std::vector<uint8_t> &bytes, const std::size_t offset = 0)
         {
             return bytes[offset];
         }
 
-        inline uint16_t read16BigEndian(const std::vector<uint8_t> &bytes, const size_t offset = 0)
+        inline uint16_t read16BigEndian(const std::vector<uint8_t> &bytes, const std::size_t offset = 0)
         {
             return static_cast<uint16_t>((static_cast<uint16_t>(bytes[offset]) << 8) | bytes[offset + 1]);
         }
 
-        inline uint32_t read32BigEndian(const std::vector<uint8_t> &bytes, const size_t offset = 0)
+        inline uint32_t read32BigEndian(const std::vector<uint8_t> &bytes, const std::size_t offset = 0)
         {
             return (static_cast<uint32_t>(bytes[offset]) << 24) |
                    (static_cast<uint32_t>(bytes[offset + 1]) << 16) |
@@ -27,7 +27,7 @@ namespace device_transport
                    static_cast<uint32_t>(bytes[offset + 3]);
         }
 
-        inline uint64_t read64BigEndian(const std::vector<uint8_t> &bytes, const size_t offset = 0)
+        inline uint64_t read64BigEndian(const std::vector<uint8_t> &bytes, const std::size_t offset = 0)
         {
             return (static_cast<uint64_t>(bytes[offset]) << 56) |
                    (static_cast<uint64_t>(bytes[offset + 1]) << 48) |
@@ -39,12 +39,12 @@ namespace device_transport
                    static_cast<uint64_t>(bytes[offset + 7]);
         }
 
-        inline uint16_t read16LittleEndian(const std::vector<uint8_t> &bytes, const size_t offset = 0)
+        inline uint16_t read16LittleEndian(const std::vector<uint8_t> &bytes, const std::size_t offset = 0)
         {
             return static_cast<uint16_t>(bytes[offset] | (static_cast<uint16_t>(bytes[offset + 1]) << 8));
         }
 
-        inline uint32_t read32LittleEndian(const std::vector<uint8_t> &bytes, const size_t offset = 0)
+        inline uint32_t read32LittleEndian(const std::vector<uint8_t> &bytes, const std::size_t offset = 0)
         {
             return static_cast<uint32_t>(bytes[offset]) |
                    (static_cast<uint32_t>(bytes[offset + 1]) << 8) |
@@ -52,7 +52,7 @@ namespace device_transport
                    (static_cast<uint32_t>(bytes[offset + 3]) << 24);
         }
 
-        inline uint64_t read64LittleEndian(const std::vector<uint8_t> &bytes, const size_t offset = 0)
+        inline uint64_t read64LittleEndian(const std::vector<uint8_t> &bytes, const std::size_t offset = 0)
         {
             return static_cast<uint64_t>(bytes[offset]) |
                    (static_cast<uint64_t>(bytes[offset + 1]) << 8) |
@@ -153,22 +153,22 @@ namespace device_transport
             return raw;
         }
 
-        inline float readFloatBigEndian(const std::vector<uint8_t> &bytes, const size_t offset = 0)
+        inline float readFloatBigEndian(const std::vector<uint8_t> &bytes, const std::size_t offset = 0)
         {
             return bitsToFloat(read32BigEndian(bytes, offset));
         }
 
-        inline float readFloatLittleEndian(const std::vector<uint8_t> &bytes, const size_t offset = 0)
+        inline float readFloatLittleEndian(const std::vector<uint8_t> &bytes, const std::size_t offset = 0)
         {
             return bitsToFloat(read32LittleEndian(bytes, offset));
         }
 
-        inline double readDoubleBigEndian(const std::vector<uint8_t> &bytes, const size_t offset = 0)
+        inline double readDoubleBigEndian(const std::vector<uint8_t> &bytes, const std::size_t offset = 0)
         {
             return bitsToDouble(read64BigEndian(bytes, offset));
         }
 
-        inline double readDoubleLittleEndian(const std::vector<uint8_t> &bytes, const size_t offset = 0)
+        inline double readDoubleLittleEndian(const std::vector<uint8_t> &bytes, const std::size_t offset = 0)
         {
             return bitsToDouble(read64LittleEndian(bytes, offset));
         }

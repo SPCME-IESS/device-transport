@@ -16,7 +16,7 @@
 
 namespace device_transport
 {
-    using XBeeTraceCallback = void (*)(TraceDirection direction, const uint8_t *bytes, size_t size, void *userData);
+    using XBeeTraceCallback = void (*)(TraceDirection direction, const uint8_t *bytes, std::size_t size, void *userData);
 
     class XBee
     {
@@ -78,7 +78,7 @@ namespace device_transport
         mutable std::mutex _parsedPayloadMutex;
         std::mutex _traceMutex;
         std::condition_variable _traceCondition;
-        size_t _activeTraceCallbacks{};
+        std::size_t _activeTraceCallbacks{};
         std::condition_variable _parsedPayloadCondition;
         bool _parsedPayloadWaitInterrupted{};
         std::mutex _commandMutex;
@@ -101,7 +101,7 @@ namespace device_transport
         uint8_t _sendFrameData(std::vector<uint8_t> &tracedOutput);
 
         void _appendEscapedByte(std::vector<uint8_t> &output, uint8_t byte) const;
-        void _trace(TraceDirection direction, const uint8_t *bytes, size_t size);
+        void _trace(TraceDirection direction, const uint8_t *bytes, std::size_t size);
 
         void _parserLoop();
     };
