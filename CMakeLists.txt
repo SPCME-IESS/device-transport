@@ -12,7 +12,6 @@ if(NOT WIN32)
 endif()
 
 add_library(device_transport_core INTERFACE)
-add_library(device_transport::core ALIAS device_transport_core)
 
 target_compile_features(device_transport_core
     INTERFACE
@@ -34,8 +33,6 @@ add_library(device_transport_serial STATIC
     src/serial_port/serial_port.cpp
 )
 
-add_library(device_transport::serial ALIAS device_transport_serial)
-
 target_compile_features(device_transport_serial
     PUBLIC
         cxx_std_11
@@ -55,8 +52,6 @@ add_library(device_transport_desktop STATIC
     src/xbee/xbee.cpp
 )
 
-add_library(device_transport::desktop ALIAS device_transport_desktop)
-
 target_compile_features(device_transport_desktop
     PUBLIC
         cxx_std_11
@@ -74,11 +69,10 @@ set_target_properties(device_transport_desktop
 )
 
 add_library(device_transport INTERFACE)
-add_library(device_transport::device_transport ALIAS device_transport)
 
 target_link_libraries(device_transport
     INTERFACE
-        device_transport::desktop
+        device_transport_desktop
 )
 
 set_target_properties(device_transport
@@ -105,7 +99,6 @@ if(DEVICE_TRANSPORT_INSTALL)
 
     install(EXPORT device_transportTargets
         FILE device_transportTargets.cmake
-        NAMESPACE device_transport::
         DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/device_transport
     )
 
