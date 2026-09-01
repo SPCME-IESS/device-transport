@@ -74,22 +74,22 @@ cmake --build --preset default
 
 ```cmake
 add_subdirectory(path/to/device-transport)
-target_link_libraries(my_app PRIVATE device_transport::desktop)
+target_link_libraries(my_app PRIVATE device_transport_desktop)
 ```
 
 After install:
 
 ```cmake
 find_package(device_transport CONFIG REQUIRED)
-target_link_libraries(my_app PRIVATE device_transport::desktop)
+target_link_libraries(my_app PRIVATE desktop)
 ```
 
 Available targets:
 
-- `device_transport::core` provides header-only byte, error, and trace helpers;
-- `device_transport::serial` provides Windows COM-port I/O;
-- `device_transport::desktop` provides XBee over `SerialPort`;
-- `device_transport::device_transport` is a compatibility alias for the desktop target.
+- `core` provides header-only byte, error, and trace helpers;
+- `serial` provides Windows COM-port I/O;
+- `desktop` provides XBee over `SerialPort`;
+- `device_transport` links the desktop transport interface.
 
 ## C++ Usage
 
@@ -100,19 +100,19 @@ Available targets:
 #include <cstdint>
 #include <vector>
 
-device_transport::XBee xbee;
-if (xbee.open("\\\\.\\COM5", 9600) != device_transport::TransportError::ok)
+XBee xbee;
+if (xbee.open("\\\\.\\COM5", 9600) != TransportError::ok)
 {
     return 1;
 }
 
 std::vector<uint8_t> payload;
-device_transport::byte_codec::write8(payload, 0x01);
-device_transport::byte_codec::write16BigEndian(payload, 0x0800);
+write8(payload, 0x01);
+write16BigEndian(payload, 0x0800);
 
 xbee.transmitRequest(
     0x0013A20000000000ULL,
-    device_transport::xbee_address::unknownXbee16Id,
+    unknownXbee16Id,
     payload);
 ```
 
@@ -122,8 +122,8 @@ address explicitly when it is not available:
 ```cpp
 xbee.remoteAtCommandRequest(
     0x0013A20000000000ULL,
-    device_transport::xbee_address::unknownXbee16Id,
-    device_transport::at_command::ni);
+    unknownXbee16Id,
+    ni);
 ```
 
 The older stateful payload API remains available for compatibility:
@@ -148,13 +148,13 @@ Raw and typed AT response helpers are available:
 
 ```cpp
 std::vector<uint8_t> data;
-xbee.readAtCommandData(device_transport::at_command::op, data, 200);
+xbee.readAtCommandData(op, data, 200);
 
 uint16_t panId = 0;
-xbee.readAtCommand16(device_transport::at_command::oi, panId, 200);
+xbee.readAtCommand16(oi, panId, 200);
 
 uint64_t extendedPanId = 0;
-xbee.readAtCommand64(device_transport::at_command::op, extendedPanId, 200);
+xbee.readAtCommand64(op, extendedPanId, 200);
 ```
 
 ## License
