@@ -62,7 +62,7 @@ bool buildFrame(std::vector<uint8_t> &output, const std::vector<uint8_t> &frameD
     }
 
     output.reserve(frameData.size() + 4);
-    output.push_back(::startDelimiter);
+    output.push_back(startDelimiter);
     output.push_back(static_cast<uint8_t>(frameData.size() >> 8));
     output.push_back(static_cast<uint8_t>(frameData.size()));
     output.insert(output.end(), frameData.begin(), frameData.end());
@@ -81,7 +81,7 @@ public:
         switch (_state)
         {
         case State::waitStart:
-            if (byte == ::startDelimiter)
+            if (byte == startDelimiter)
             {
                 _length = 0;
                 _size = 0;
@@ -158,7 +158,7 @@ XBee::~XBee()
     close();
 }
 
-uint8_t XBee::open(const std::string &portName, const uint32_t baudRate, const ::ApiMode apiMode)
+uint8_t XBee::open(const std::string &portName, const uint32_t baudRate, const ApiMode apiMode)
 {
     close();
     if (_parserThread.joinable())
@@ -217,24 +217,24 @@ void XBee::close()
 
 uint8_t XBee::openJoinWindow(const uint8_t seconds)
 {
-    const uint8_t nodeJoinResult = atCommandRequest(::nj, seconds);
+    const uint8_t nodeJoinResult = atCommandRequest(nj, seconds);
     if (nodeJoinResult != 0)
     {
         return nodeJoinResult;
     }
 
-    return atCommandRequest(::ac);
+    return atCommandRequest(ac);
 }
 
 uint8_t XBee::closeJoinWindow()
 {
-    const uint8_t nodeJoinResult = atCommandRequest(::nj, static_cast<uint8_t>(0));
+    const uint8_t nodeJoinResult = atCommandRequest(nj, static_cast<uint8_t>(0));
     if (nodeJoinResult != 0)
     {
         return nodeJoinResult;
     }
 
-    return atCommandRequest(::ac);
+    return atCommandRequest(ac);
 }
 
 bool XBee::readAtCommandData(const uint16_t atCommand, std::vector<uint8_t> &data, const uint32_t timeoutMs)
@@ -263,7 +263,7 @@ bool XBee::readAtCommandData(const uint16_t atCommand, std::vector<uint8_t> &dat
         _clearFrameData();
         ::write8(_frameData, ::atCommandRequest);
         ::write8(_frameData, frameId);
-        ::write16BigEndian(_frameData, atCommand);
+        write16BigEndian(_frameData, atCommand);
         sendResult = _sendFrameData(tracedOutput);
     }
     _trace(TraceDirection::tx, tracedOutput.data(), tracedOutput.size());
@@ -305,7 +305,7 @@ bool XBee::readAtCommand8(const uint16_t atCommand, uint8_t &value, const uint32
         return false;
     }
 
-    value = ::read8(data);
+    value = read8(data);
     return true;
 }
 
@@ -317,7 +317,7 @@ bool XBee::readAtCommand16(const uint16_t atCommand, uint16_t &value, const uint
         return false;
     }
 
-    value = ::read16BigEndian(data);
+    value = read16BigEndian(data);
     return true;
 }
 
@@ -329,7 +329,7 @@ bool XBee::readAtCommand32(const uint16_t atCommand, uint32_t &value, const uint
         return false;
     }
 
-    value = ::read32BigEndian(data);
+    value = read32BigEndian(data);
     return true;
 }
 
@@ -341,7 +341,7 @@ bool XBee::readAtCommand64(const uint16_t atCommand, uint64_t &value, const uint
         return false;
     }
 
-    value = ::read64BigEndian(data);
+    value = read64BigEndian(data);
     return true;
 }
 
@@ -353,8 +353,8 @@ uint8_t XBee::atCommandRequest(const uint16_t atCommand)
         std::lock_guard<std::mutex> commandLock(_commandMutex);
         _clearFrameData();
         ::write8(_frameData, ::atCommandRequest);
-        ::write8(_frameData, ::defaultFrameId);
-        ::write16BigEndian(_frameData, atCommand);
+        ::write8(_frameData, defaultFrameId);
+        write16BigEndian(_frameData, atCommand);
         result = _sendFrameData(tracedOutput);
     }
     _trace(TraceDirection::tx, tracedOutput.data(), tracedOutput.size());
@@ -369,8 +369,8 @@ uint8_t XBee::atCommandRequest(const uint16_t atCommand, const uint8_t value)
         std::lock_guard<std::mutex> commandLock(_commandMutex);
         _clearFrameData();
         ::write8(_frameData, ::atCommandRequest);
-        ::write8(_frameData, ::defaultFrameId);
-        ::write16BigEndian(_frameData, atCommand);
+        ::write8(_frameData, defaultFrameId);
+        write16BigEndian(_frameData, atCommand);
         ::write8(_frameData, value);
         result = _sendFrameData(tracedOutput);
     }
@@ -386,9 +386,9 @@ uint8_t XBee::atCommandRequest(const uint16_t atCommand, const uint16_t value)
         std::lock_guard<std::mutex> commandLock(_commandMutex);
         _clearFrameData();
         ::write8(_frameData, ::atCommandRequest);
-        ::write8(_frameData, ::defaultFrameId);
-        ::write16BigEndian(_frameData, atCommand);
-        ::write16BigEndian(_frameData, value);
+        ::write8(_frameData, defaultFrameId);
+        write16BigEndian(_frameData, atCommand);
+        write16BigEndian(_frameData, value);
         result = _sendFrameData(tracedOutput);
     }
     _trace(TraceDirection::tx, tracedOutput.data(), tracedOutput.size());
@@ -403,9 +403,9 @@ uint8_t XBee::atCommandRequest(const uint16_t atCommand, const uint32_t value)
         std::lock_guard<std::mutex> commandLock(_commandMutex);
         _clearFrameData();
         ::write8(_frameData, ::atCommandRequest);
-        ::write8(_frameData, ::defaultFrameId);
-        ::write16BigEndian(_frameData, atCommand);
-        ::write32BigEndian(_frameData, value);
+        ::write8(_frameData, defaultFrameId);
+        write16BigEndian(_frameData, atCommand);
+        write32BigEndian(_frameData, value);
         result = _sendFrameData(tracedOutput);
     }
     _trace(TraceDirection::tx, tracedOutput.data(), tracedOutput.size());
@@ -420,9 +420,9 @@ uint8_t XBee::atCommandRequest(const uint16_t atCommand, const uint64_t value)
         std::lock_guard<std::mutex> commandLock(_commandMutex);
         _clearFrameData();
         ::write8(_frameData, ::atCommandRequest);
-        ::write8(_frameData, ::defaultFrameId);
-        ::write16BigEndian(_frameData, atCommand);
-        ::write64BigEndian(_frameData, value);
+        ::write8(_frameData, defaultFrameId);
+        write16BigEndian(_frameData, atCommand);
+        write64BigEndian(_frameData, value);
         result = _sendFrameData(tracedOutput);
     }
     _trace(TraceDirection::tx, tracedOutput.data(), tracedOutput.size());
@@ -440,11 +440,11 @@ uint8_t XBee::remoteAtCommandRequest(
         std::lock_guard<std::mutex> lock(_commandMutex);
         _clearFrameData();
         ::write8(_frameData, ::remoteAtCommandRequest);
-        ::write8(_frameData, ::defaultFrameId);
-        ::write64BigEndian(_frameData, destinationXbee64Id);
-        ::write16BigEndian(_frameData, destinationXbee16Id);
-        ::write8(_frameData, ::remoteCommandOptionsApplyChanges);
-        ::write16BigEndian(_frameData, atCommand);
+        ::write8(_frameData, defaultFrameId);
+        write64BigEndian(_frameData, destinationXbee64Id);
+        write16BigEndian(_frameData, destinationXbee16Id);
+        ::write8(_frameData, remoteCommandOptionsApplyChanges);
+        write16BigEndian(_frameData, atCommand);
         result = _sendFrameData(tracedOutput);
     }
     _trace(TraceDirection::tx, tracedOutput.data(), tracedOutput.size());
@@ -463,11 +463,11 @@ uint8_t XBee::remoteAtCommandRequest(
         std::lock_guard<std::mutex> lock(_commandMutex);
         _clearFrameData();
         ::write8(_frameData, ::remoteAtCommandRequest);
-        ::write8(_frameData, ::defaultFrameId);
-        ::write64BigEndian(_frameData, destinationXbee64Id);
-        ::write16BigEndian(_frameData, destinationXbee16Id);
-        ::write8(_frameData, ::remoteCommandOptionsApplyChanges);
-        ::write16BigEndian(_frameData, atCommand);
+        ::write8(_frameData, defaultFrameId);
+        write64BigEndian(_frameData, destinationXbee64Id);
+        write16BigEndian(_frameData, destinationXbee16Id);
+        ::write8(_frameData, remoteCommandOptionsApplyChanges);
+        write16BigEndian(_frameData, atCommand);
         ::write8(_frameData, value);
         result = _sendFrameData(tracedOutput);
     }
@@ -487,12 +487,12 @@ uint8_t XBee::remoteAtCommandRequest(
         std::lock_guard<std::mutex> lock(_commandMutex);
         _clearFrameData();
         ::write8(_frameData, ::remoteAtCommandRequest);
-        ::write8(_frameData, ::defaultFrameId);
-        ::write64BigEndian(_frameData, destinationXbee64Id);
-        ::write16BigEndian(_frameData, destinationXbee16Id);
-        ::write8(_frameData, ::remoteCommandOptionsApplyChanges);
-        ::write16BigEndian(_frameData, atCommand);
-        ::write16BigEndian(_frameData, value);
+        ::write8(_frameData, defaultFrameId);
+        write64BigEndian(_frameData, destinationXbee64Id);
+        write16BigEndian(_frameData, destinationXbee16Id);
+        ::write8(_frameData, remoteCommandOptionsApplyChanges);
+        write16BigEndian(_frameData, atCommand);
+        write16BigEndian(_frameData, value);
         result = _sendFrameData(tracedOutput);
     }
     _trace(TraceDirection::tx, tracedOutput.data(), tracedOutput.size());
@@ -511,12 +511,12 @@ uint8_t XBee::remoteAtCommandRequest(
         std::lock_guard<std::mutex> lock(_commandMutex);
         _clearFrameData();
         ::write8(_frameData, ::remoteAtCommandRequest);
-        ::write8(_frameData, ::defaultFrameId);
-        ::write64BigEndian(_frameData, destinationXbee64Id);
-        ::write16BigEndian(_frameData, destinationXbee16Id);
-        ::write8(_frameData, ::remoteCommandOptionsApplyChanges);
-        ::write16BigEndian(_frameData, atCommand);
-        ::write32BigEndian(_frameData, value);
+        ::write8(_frameData, defaultFrameId);
+        write64BigEndian(_frameData, destinationXbee64Id);
+        write16BigEndian(_frameData, destinationXbee16Id);
+        ::write8(_frameData, remoteCommandOptionsApplyChanges);
+        write16BigEndian(_frameData, atCommand);
+        write32BigEndian(_frameData, value);
         result = _sendFrameData(tracedOutput);
     }
     _trace(TraceDirection::tx, tracedOutput.data(), tracedOutput.size());
@@ -535,12 +535,12 @@ uint8_t XBee::remoteAtCommandRequest(
         std::lock_guard<std::mutex> lock(_commandMutex);
         _clearFrameData();
         ::write8(_frameData, ::remoteAtCommandRequest);
-        ::write8(_frameData, ::defaultFrameId);
-        ::write64BigEndian(_frameData, destinationXbee64Id);
-        ::write16BigEndian(_frameData, destinationXbee16Id);
-        ::write8(_frameData, ::remoteCommandOptionsApplyChanges);
-        ::write16BigEndian(_frameData, atCommand);
-        ::write64BigEndian(_frameData, value);
+        ::write8(_frameData, defaultFrameId);
+        write64BigEndian(_frameData, destinationXbee64Id);
+        write16BigEndian(_frameData, destinationXbee16Id);
+        ::write8(_frameData, remoteCommandOptionsApplyChanges);
+        write16BigEndian(_frameData, atCommand);
+        write64BigEndian(_frameData, value);
         result = _sendFrameData(tracedOutput);
     }
     _trace(TraceDirection::tx, tracedOutput.data(), tracedOutput.size());
@@ -575,9 +575,9 @@ uint8_t XBee::transmitRequest(
         std::lock_guard<std::mutex> lock(_commandMutex);
         _clearFrameData();
         ::write8(_frameData, ::transmitRequest);
-        ::write8(_frameData, ::defaultFrameId);
-        ::write64BigEndian(_frameData, destinationXbee64Id);
-        ::write16BigEndian(_frameData, destinationXbee16Id);
+        ::write8(_frameData, defaultFrameId);
+        write64BigEndian(_frameData, destinationXbee64Id);
+        write16BigEndian(_frameData, destinationXbee16Id);
         ::write8(_frameData, broadcastRadius);
         ::write8(_frameData, options);
         _frameData.insert(_frameData.end(), payload.begin(), payload.end());
@@ -602,19 +602,19 @@ void XBee::write8(const uint8_t input)
 void XBee::write16(const uint16_t input)
 {
     std::lock_guard<std::mutex> lock(_outputPayloadMutex);
-    ::write16BigEndian(_outputPayload, input);
+    write16BigEndian(_outputPayload, input);
 }
 
 void XBee::write32(const uint32_t input)
 {
     std::lock_guard<std::mutex> lock(_outputPayloadMutex);
-    ::write32BigEndian(_outputPayload, input);
+    write32BigEndian(_outputPayload, input);
 }
 
 void XBee::write64(const uint64_t input)
 {
     std::lock_guard<std::mutex> lock(_outputPayloadMutex);
-    ::write64BigEndian(_outputPayload, input);
+    write64BigEndian(_outputPayload, input);
 }
 
 std::vector<ReceivedXBeeFrame> XBee::getParsedInputPayload()
@@ -700,14 +700,14 @@ uint8_t XBee::_sendFrameData(std::vector<uint8_t> &tracedOutput)
     tracedOutput.clear();
 
     std::vector<uint8_t> frame;
-    if (!::buildFrame(frame, _frameData))
+    if (!buildFrame(frame, _frameData))
     {
         return 1;
     }
 
     std::vector<uint8_t> output;
     output.reserve(frame.size() * 2);
-    output.push_back(::startDelimiter);
+    output.push_back(startDelimiter);
     for (std::size_t i = 1; i < frame.size(); ++i)
     {
         _appendEscapedByte(output, frame[i]);
@@ -726,10 +726,10 @@ uint8_t XBee::_sendFrameData(std::vector<uint8_t> &tracedOutput)
 
 void XBee::_appendEscapedByte(std::vector<uint8_t> &output, const uint8_t byte) const
 {
-    if (_apiMode == ::ApiMode::api2 &&
-        (byte == ::startDelimiter || byte == ::escape || byte == ::xon || byte == ::xoff))
+    if (_apiMode == ApiMode::api2 &&
+        (byte == startDelimiter || byte == escape || byte == xon || byte == xoff))
     {
-        output.push_back(::escape);
+        output.push_back(escape);
         output.push_back(static_cast<uint8_t>(byte ^ 0x20));
         return;
     }
@@ -770,7 +770,7 @@ void XBee::_trace(const TraceDirection direction, const uint8_t *bytes, const st
 
 void XBee::_parserLoop()
 {
-    ::FrameParser<1024> parser;
+    FrameParser<1024> parser;
     bool insideFrame = false;
     bool escapeNext = false;
 
@@ -805,7 +805,7 @@ void XBee::_parserLoop()
 
             if (!insideFrame)
             {
-                if (byte != ::startDelimiter)
+                if (byte != startDelimiter)
                 {
                     continue;
                 }
@@ -814,36 +814,36 @@ void XBee::_parserLoop()
                 insideFrame = true;
                 escapeNext = false;
             }
-            else if (_apiMode == ::ApiMode::api2 && byte == ::startDelimiter)
+            else if (_apiMode == ApiMode::api2 && byte == startDelimiter)
             {
                 parser.reset();
                 insideFrame = true;
                 escapeNext = false;
             }
-            else if (_apiMode == ::ApiMode::api2 && insideFrame)
+            else if (_apiMode == ApiMode::api2 && insideFrame)
             {
                 if (escapeNext)
                 {
                     byte = static_cast<uint8_t>(byte ^ 0x20);
                     escapeNext = false;
                 }
-                else if (byte == ::escape)
+                else if (byte == escape)
                 {
                     escapeNext = true;
                     continue;
                 }
             }
 
-            ::FrameView frame;
-            const ::ParseStatus status = parser.process(byte, frame);
-            if (status == ::ParseStatus::checksumError || status == ::ParseStatus::frameTooLarge)
+            FrameView frame;
+            const ParseStatus status = parser.process(byte, frame);
+            if (status == ParseStatus::checksumError || status == ParseStatus::frameTooLarge)
             {
                 insideFrame = false;
                 escapeNext = false;
                 continue;
             }
 
-            if (status != ::ParseStatus::frameReady || frame.size == 0)
+            if (status != ParseStatus::frameReady || frame.size == 0)
             {
                 continue;
             }
@@ -854,7 +854,7 @@ void XBee::_parserLoop()
             const uint8_t frameType = frame.data[0];
             const std::vector<uint8_t> frameData(frame.data, frame.data + frame.size);
             std::vector<uint8_t> rawFrame;
-            if (::buildFrame(rawFrame, frameData))
+            if (buildFrame(rawFrame, frameData))
             {
                 _trace(TraceDirection::rx, rawFrame.data(), rawFrame.size());
             }
@@ -863,11 +863,11 @@ void XBee::_parserLoop()
                 _trace(TraceDirection::rx, frame.data, frame.size);
             }
 
-            if (frameType == ::atCommandResponse && frame.size >= 5)
+            if (frameType == atCommandResponse && frame.size >= 5)
             {
                 AtCommandResponse response;
                 response.frameId = frame.data[1];
-                response.atCommand = ::read16BigEndian(frameData, 2);
+                response.atCommand = read16BigEndian(frameData, 2);
                 response.status = frame.data[4];
                 response.value.assign(frame.data + 5, frame.data + frame.size);
 
@@ -887,11 +887,11 @@ void XBee::_parserLoop()
                 continue;
             }
 
-            if (frameType == ::receivePacket && frame.size >= 12)
+            if (frameType == receivePacket && frame.size >= 12)
             {
                 ReceivedXBeeFrame payload;
-                payload.xbee64Id = ::read64BigEndian(frameData, 1);
-                payload.xbee16Id = ::read16BigEndian(frameData, 9);
+                payload.xbee64Id = read64BigEndian(frameData, 1);
+                payload.xbee16Id = read16BigEndian(frameData, 9);
                 payload.receiveOptions = frame.data[11];
                 payload.payload.assign(frame.data + 12, frame.data + frame.size);
                 {
@@ -902,11 +902,11 @@ void XBee::_parserLoop()
                 continue;
             }
 
-            if (frameType == ::explicitReceiveIndicator && frame.size >= 18)
+            if (frameType == explicitReceiveIndicator && frame.size >= 18)
             {
                 ReceivedXBeeFrame payload;
-                payload.xbee64Id = ::read64BigEndian(frameData, 1);
-                payload.xbee16Id = ::read16BigEndian(frameData, 9);
+                payload.xbee64Id = read64BigEndian(frameData, 1);
+                payload.xbee16Id = read16BigEndian(frameData, 9);
                 payload.receiveOptions = frame.data[17];
                 payload.payload.assign(frame.data + 18, frame.data + frame.size);
                 {
