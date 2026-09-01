@@ -22,7 +22,7 @@ public:
     XBee() = default;
     ~XBee();
 
-    TransportError open(const std::string &portName, uint32_t baudRate = 9600, ::ApiMode apiMode = ::ApiMode::api1);
+    uint8_t open(const std::string &portName, uint32_t baudRate = 9600, ::ApiMode apiMode = ::ApiMode::api1);
     bool isOpen() const;
     void close();
 
