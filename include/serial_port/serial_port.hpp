@@ -1,7 +1,5 @@
 #pragma once
 
-#include "core/error.hpp"
-
 #include <atomic>
 #include <condition_variable>
 #include <cstddef>
@@ -17,7 +15,7 @@ public:
     SerialPort() = default;
     ~SerialPort();
 
-    TransportError open(const std::string &portName, uint32_t baudRate);
+    uint8_t open(const std::string &portName, uint32_t baudRate);
     bool isOpen() const;
     void close();
 
@@ -61,7 +59,7 @@ private:
     mutable std::mutex _outputMutex;
     mutable std::condition_variable _inputCondition;
 
-    TransportError _openNativeHandle();
+    uint8_t _openNativeHandle();
     void _closeNativeHandle();
     void _markConnectionLost() const;
     void _readerLoop();

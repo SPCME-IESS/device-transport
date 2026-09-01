@@ -13,23 +13,22 @@ SerialPort::~SerialPort()
     close();
 }
 
-TransportError SerialPort::open(const std::string &portName, const uint32_t baudRate)
+uint8_t SerialPort::open(const std::string &portName, const uint32_t baudRate)
 {
     close();
     _closing = false;
 
     if (portName.empty() || baudRate == 0)
     {
-        return TransportError::invalidArgument;
+        return 1;
     }
 
     _portName = portName;
     _baudRate = baudRate;
 
-    const TransportError openResult = _openNativeHandle();
-    if (openResult != TransportError::ok)
+    if (_openNativeHandle() != 0)
     {
-        return openResult;
+        return 1;
     }
 
     {
@@ -42,7 +41,7 @@ TransportError SerialPort::open(const std::string &portName, const uint32_t baud
 
     _running = true;
     _readerThread = std::thread(&SerialPort::_readerLoop, this);
-    return TransportError::ok;
+    return 0;
 }
 
 bool SerialPort::isOpen() const
@@ -253,17 +252,17 @@ uint32_t SerialPort::send()
     return totalWritten;
 }
 
-TransportError SerialPort::_openNativeHandle()
+uint8_t SerialPort::_openNativeHandle()
 {
     if (_closing)
     {
-        return TransportError::openFailed;
+        return 1;
     }
 
     HANDLE handle = CreateFileA(_portName.c_str(), GENERIC_READ | GENERIC_WRITE, 0, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
     if (handle == INVALID_HANDLE_VALUE)
     {
-        return TransportError::openFailed;
+        return 1;
     }
 
     DCB dcb{};
@@ -271,7 +270,7 @@ TransportError SerialPort::_openNativeHandle()
     if (!GetCommState(handle, &dcb))
     {
         CloseHandle(handle);
-        return TransportError::stateReadFailed;
+        return 1;
     }
 
     dcb.BaudRate = static_cast<DWORD>(_baudRate);
@@ -292,7 +291,7 @@ TransportError SerialPort::_openNativeHandle()
     if (!SetCommState(handle, &dcb))
     {
         CloseHandle(handle);
-        return TransportError::configureFailed;
+        return 1;
     }
 
     COMMTIMEOUTS timeouts{};
@@ -304,14 +303,14 @@ TransportError SerialPort::_openNativeHandle()
     if (!SetCommTimeouts(handle, &timeouts))
     {
         CloseHandle(handle);
-        return TransportError::timeoutConfigureFailed;
+        return 1;
     }
 
     std::lock_guard<std::mutex> lock(_nativeHandleMutex);
     if (_closing)
     {
         CloseHandle(handle);
-        return TransportError::openFailed;
+        return 1;
     }
 
     if (_nativeHandle != nullptr)
@@ -323,7 +322,7 @@ TransportError SerialPort::_openNativeHandle()
     _nativeHandle = handle;
     _connectionLost = false;
     _inputCondition.notify_all();
-    return TransportError::ok;
+    return 0;
 }
 
 void SerialPort::_closeNativeHandle()
@@ -366,7 +365,7 @@ void SerialPort::_readerLoop()
             _closeNativeHandle();
             clearInputBuffer();
             _inputCondition.notify_all();
-            while (_running && !_closing && _openNativeHandle() != TransportError::ok)
+            while (_running && !_closing && _openNativeHandle() != 0)
             {
                 std::this_thread::sleep_for(std::chrono::milliseconds(1000));
             }

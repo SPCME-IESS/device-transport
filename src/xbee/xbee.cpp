@@ -158,18 +158,17 @@ XBee::~XBee()
     close();
 }
 
-TransportError XBee::open(const std::string &portName, const uint32_t baudRate, const ::ApiMode apiMode)
+uint8_t XBee::open(const std::string &portName, const uint32_t baudRate, const ::ApiMode apiMode)
 {
     close();
     if (_parserThread.joinable())
     {
-        return TransportError::openFailed;
+        return 1;
     }
 
-    const TransportError openResult = _serialPort.open(portName, baudRate);
-    if (openResult != TransportError::ok)
+    if (_serialPort.open(portName, baudRate) != 0)
     {
-        return openResult;
+        return 1;
     }
 
     {
@@ -195,7 +194,7 @@ TransportError XBee::open(const std::string &portName, const uint32_t baudRate, 
     _apiMode = apiMode;
     _running = true;
     _parserThread = std::thread(&XBee::_parserLoop, this);
-    return TransportError::ok;
+    return 0;
 }
 
 bool XBee::isOpen() const

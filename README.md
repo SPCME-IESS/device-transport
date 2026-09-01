@@ -101,7 +101,7 @@ Available targets:
 #include <vector>
 
 XBee xbee;
-if (xbee.open("\\\\.\\COM5", 9600) != TransportError::ok)
+if (xbee.open("\\\\.\\COM5", 9600) != 0)
 {
     return 1;
 }
